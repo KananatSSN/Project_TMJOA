@@ -1,5 +1,5 @@
 import slicer
-from DentalSegmentatorLib import PythonDependencyChecker, SegmentationWidget, ExportFormat
+from DentalSegmentatorLib import SegmentationWidget, ExportFormat
 from pathlib import Path
 import os
 import shutil

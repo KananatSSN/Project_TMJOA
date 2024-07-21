@@ -59,8 +59,13 @@ for folder_name in in_data_folder:
         # Working directory
         patient_folder = os.path.join(year_folder,folder_name)
 
-        # Load dcm to 3dslicer node
+        # Check if _Z folder exist
         dicomDataDir = os.path.join(patient_folder,r"_Z")
+        if not os.path.isdir(dicomDataDir):
+            print(f"ERROR : There is no _Z folder in {os.path.basename(patient_folder)}")
+            continue
+
+        # Load dcm to 3dslicer node
         loadedNodeIDs = []
         with DICOMUtils.TemporaryDICOMDatabase() as db:
             DICOMUtils.importDicom(dicomDataDir, db)
@@ -80,5 +85,6 @@ for folder_name in in_data_folder:
         # Remove node
         slicer.mrmlScene.RemoveNode(volumeNode)
         slicer.app.processEvents()
+        print("Success")
 
 print("Done")
