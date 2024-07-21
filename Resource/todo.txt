@@ -1,0 +1,4 @@
+1. Integrate new dicom and classification previously missing
+2. Flip L to R
+3. Crop images to 64*64*64 (center at the mandibular joint)
+4. Done with Phase 1 for real this time
