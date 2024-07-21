@@ -1,8 +1,10 @@
+# This is for automatically click yes when 3dslicer ask if you want to continue without GPU
+
 import pyautogui
 import keyboard
 import time
 
-button_image_path = r"C:\Users\acer\Desktop\Project\Code\yes_button.png"  # Adjust the path as necessary
+button_image_path = r"C:\Users\acer\Desktop\Project_TMJOA\Resource\yes_button.png"  # Adjust the path as necessary
 confidence_level = 0.8  # Adjust the confidence level as needed
 
 while True:

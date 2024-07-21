@@ -1,7 +1,7 @@
 import os
 
 # Path to the root directory named "A folder"
-root_path = r"C:\Users\acer\Desktop\Project\Data\66-2023"
+root_path = r"C:\Users\acer\Desktop\Back up\raw_Data_and_extra"
 
 # Loop through each directory in the root path
 for folder_name in os.listdir(root_path):
