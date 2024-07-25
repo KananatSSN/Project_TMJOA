@@ -6,7 +6,7 @@ from slicer.ScriptedLoadableModule import *
 import vtk, qt, ctk
 
 # Define the folder containing the .nii files
-input_folder = r"C:\Users\acer\Desktop\Data_Prep_3\CropTMJ2"
+input_folder = r"C:\Users\acer\Desktop\Data_Prep_3\CropTMJ2_squeezed"
 output_file = r"C:\Users\acer\Desktop\Data_Prep_3\Problem_file.txt"
 
 with open(output_file, 'w') as log_file:
