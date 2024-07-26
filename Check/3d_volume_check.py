@@ -41,12 +41,12 @@ with open(output_file, 'w') as log_file:
 
             # Wait for user input to continue or log the file
             while True:
-                user_input = input(f"{filename}\n[ok/no] : ").lower()
+                user_input = input(f"{filename}\n[y/n] : ").lower()
                 slicer.app.processEvents()
-                if user_input == 'ok':
+                if user_input == 'y':
                     slicer.app.processEvents()
                     break
-                elif user_input == 'no':
+                elif user_input == 'n':
                     log_file.write(filename + '\n')
                     #log_file.flush()
                     print(f"Logged {filename}")
@@ -57,7 +57,7 @@ with open(output_file, 'w') as log_file:
                     slicer.app.processEvents()
                     sys.exit()
                 else:
-                    print("Invalid input, please type 'ok' or 'no'.")
+                    print("Invalid input, please type 'y' or 'n'.")
                 slicer.app.processEvents()
 
             slicer.mrmlScene.RemoveNode(loadedVolume)
