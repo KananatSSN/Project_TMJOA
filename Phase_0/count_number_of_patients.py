@@ -1,31 +1,34 @@
 import os
 
 # Path to the root directory named "A folder"
-root_path = r"C:\Users\acer\Desktop\Back up\raw_Data_and_extra"
+data_path = r"C:\Users\acer\Desktop\Back up\raw_Data_and_extra\Data"
 
-# Loop through each directory in the root path
-for folder_name in os.listdir(root_path):
+count = 0
 
-    # Construct the path to this folder
-    folder_path = os.path.join(root_path, folder_name)
+# Loop through each directory in the data path
+for year_folder in os.listdir(data_path):
 
-    # Check if the current path is a directory
-    if os.path.isdir(folder_path):
-
-        # List all the contents in this folder
-        contents = os.listdir(folder_path)
+    # Loop through each directory in the year path
+    year_path = os.path.join(data_path, year_folder)
+    for patient_folder in os.listdir(year_path):
         
-        # Count how many "Z" folders there are
+        count += 1
+
+        # Check if the patient folder contains "_Z" and other items
+        patient_path = os.path.join(year_path, patient_folder)
+        contents = os.listdir(patient_path)
         z_count = contents.count('_Z')
-        
-        # Determine if there are other items in the folder besides "Z"
         other_items = len(contents) - z_count
         
         # Print the result for this folder
         if z_count == 1 and other_items == 0:
-            print(f'"{folder_name}" Pass')
-        elif z_count == 1:
-            print(f'"{folder_name}" Not pass')
+            #print(f'"{patient_folder}" Pass')
+            t = 1
+        elif z_count == 0:
+            print(f"{patient_path}")
+            print(f"{patient_folder} doesn't contain _Z folder")
         else:
-            print(f'"{folder_name}" does not meet the required criteria. It has {z_count} "_Z" folders and {other_items} other items. Check required.')
+            print(f"{patient_path}")
+            print(f"{patient_folder} It has {z_count} _Z folders and {other_items} other items. Check required.")
 
+print(count)

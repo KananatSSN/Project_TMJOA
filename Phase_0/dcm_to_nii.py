@@ -38,8 +38,8 @@ def construct_name(folder_path):
 # Main loop
 from DICOMLib import DICOMUtils
 
-data_path = r"C:\Users\acer\Desktop\Test_input\Data"
-output_folder = r"C:\Users\acer\Desktop\Test_output"
+data_path = r"C:\Users\acer\Desktop\Back up\raw_Data_and_extra\Data"
+output_folder = r"C:\Users\acer\Desktop\Data_0"
 in_data_folder = os.listdir(data_path)
 
 for folder_name in in_data_folder:
