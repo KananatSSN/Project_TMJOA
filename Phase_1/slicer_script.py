@@ -1,3 +1,5 @@
+#exec(open(r"C:\Users\acer\Desktop\Project_TMJOA\Phase_1\slicer_script.py").read())
+
 import slicer
 from DentalSegmentatorLib import SegmentationWidget, ExportFormat
 from pathlib import Path
@@ -7,7 +9,7 @@ import shutil
 def single_segmentation(filepath, outputfolder):
 
     file_name = os.path.basename(filepath)
-    file_name_without_extension, _ = os.path.splitext(file_name)
+    file_name_without_extension = file_name.split('.')[0]
 
     print(f"Processing {file_name}")
     
@@ -46,18 +48,18 @@ def single_segmentation(filepath, outputfolder):
 
 ###########################################################################################
 
-input_folder = r"C:\Users\acer\Desktop\Data_Prep_0\imagesTr"
-output_folder = r"C:\Users\acer\Desktop\Data_Prep_0\labelsTr"
+input_folder = r"C:\Users\acer\Desktop\Test_input\Data_0"
+output_folder = r"C:\Users\acer\Desktop\Test_output"
 
-nii_count = len([filename for filename in os.listdir(input_folder) if filename.endswith('.nii')])
-print(f"There are {nii_count} .nii files in the {input_folder}")
+nii_count = len([filename for filename in os.listdir(input_folder) if filename.endswith('.nii.gz')])
+print(f"There are {nii_count} .nii.gz files in the {input_folder}")
 
 progress_count = 0
 
 files = sorted(os.listdir(input_folder), reverse=True)
 
 for filename in files :
-    if filename.endswith('.nii'):
+    if filename.endswith('.nii.gz'):
         progress_count += 1
         print(f"[Processing {progress_count} out of {nii_count}]")
 
@@ -65,11 +67,9 @@ for filename in files :
         single_segmentation(file_path, output_folder)
 
         source = file_path
-        destination = r"C:\Users\acer\Desktop\Data_Prep_0\imagesTr\Processed"
+        destination = r"C:\Users\acer\Desktop\Test_input\Data_0\Processed"
 
         shutil.move(source, destination)
         print(f"Moves {filename} from {source} to {destination}")
 
 print("Done")
-
-#exec(open(r"C:\Users\acer\Desktop\Project\Code\slicer_script.py").read())
