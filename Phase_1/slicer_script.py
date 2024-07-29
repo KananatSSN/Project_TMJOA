@@ -48,8 +48,8 @@ def single_segmentation(filepath, outputfolder):
 
 ###########################################################################################
 
-input_folder = r"C:\Users\acer\Desktop\Test_input\Data_0"
-output_folder = r"C:\Users\acer\Desktop\Test_output"
+input_folder = r"C:\Users\acer\Desktop\Data_0"
+output_folder = r"C:\Users\acer\Desktop\Data_0\Segmentation"
 
 nii_count = len([filename for filename in os.listdir(input_folder) if filename.endswith('.nii.gz')])
 print(f"There are {nii_count} .nii.gz files in the {input_folder}")
@@ -67,7 +67,7 @@ for filename in files :
         single_segmentation(file_path, output_folder)
 
         source = file_path
-        destination = r"C:\Users\acer\Desktop\Test_input\Data_0\Processed"
+        destination = r"C:\Users\acer\Desktop\Data_0\Processed"
 
         shutil.move(source, destination)
         print(f"Moves {filename} from {source} to {destination}")
