@@ -6,7 +6,7 @@ from pathlib import Path
 folder_path = r"C:\Users\acer\Desktop\Data_0\Processed"
 
 # Path to your Excel file
-excel_file = r"C:\Users\acer\Desktop\Data_0\Classification.xlsx"
+excel_file = r"C:\Users\acer\Desktop\Data_0\Classification_ignore_missing.xlsx"
 
 # Column name in Excel file containing file names
 column_name = "ID"  # Replace with your actual column name

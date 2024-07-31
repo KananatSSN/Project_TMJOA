@@ -1,5 +1,5 @@
 # Run this program in 3dslicer Python Console with the command below
-# exec(open(r"C:\Users\acer\Desktop\Project\Code\Phase_1.5\masking.py").read())
+# exec(open(r"C:\Users\acer\Desktop\Project_TMJOA\Phase_1.5\masking.py").read())
 
 import os
 
@@ -62,24 +62,24 @@ def segmentation_masking(volume_path, segmentation_path, output_folder):
 
 ###########################################################################################
 
-volume_folder = r"C:\Users\acer\Desktop\Data_Prep_1\imagesTr"
-segment_folder = r"C:\Users\acer\Desktop\Data_Prep_1\labelsTr\Output"
-output_folder = r"C:\Users\acer\Desktop\Data_Prep_2\imagesTr"
+volume_folder = r"C:\Users\acer\Desktop\Data_0\Nii"
+segment_folder = r"C:\Users\acer\Desktop\Data_0\Segmentation\Filled"
+output_folder = r"C:\Users\acer\Desktop\Data_0\Nii_masked"
 
-nii_count = len([filename for filename in os.listdir(volume_folder) if filename.endswith('.nii')])
-print(f"There are {nii_count} .nii files in the {volume_folder}")
+nii_count = len([filename for filename in os.listdir(volume_folder) if filename.endswith('.nii.gz')])
+print(f"There are {nii_count} .nii.gz files in the {volume_folder}")
 
 progress_count = 0
 
 files = sorted(os.listdir(volume_folder))
 
 for filename in files :
-    if filename.endswith('.nii'):
+    if filename.endswith('.nii.gz'):
         progress_count += 1
         print(f"[Processing {progress_count} out of {nii_count}]")
 
         volume_path = os.path.join(volume_folder, filename)
-        segmentation_path = os.path.splitext(filename)[0]
+        segmentation_path = filename.split(".")[0]
         segmentation_path = f"{segmentation_path}_segmented_filled.nii.gz"
         segmentation_path = os.path.join(segment_folder,segmentation_path)
 
