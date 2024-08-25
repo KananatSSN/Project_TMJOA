@@ -10,7 +10,7 @@ RegNetX320
 RegNetY320
 ResNetRS420
 ResNet152V2
-VGG19
+VGG19 Done
 Xception
 
 from keras.applications.densenet import DenseNet121
