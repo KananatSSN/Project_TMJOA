@@ -4,8 +4,8 @@ EfficientNetB7 Done
 EfficientNetV2L Done
 InceptionResNetV2 Done
 InceptionV3 Done
-MobileNetV3Large 
-NASNetLarge
+MobileNetV3Large Done
+NASNetLarge *need input dimension 331*331
 RegNetX320
 RegNetY320
 ResNetRS420
