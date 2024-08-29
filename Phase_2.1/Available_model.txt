@@ -6,10 +6,10 @@ InceptionResNetV2 Done
 InceptionV3 Done
 MobileNetV3Large Done
 NASNetLarge *need input dimension 331*331
-RegNetX320
-RegNetY320
+RegNetX320 Done
+RegNetY320 Done
 ResNetRS420
-ResNet152V2
+ResNet152V2 Done
 VGG19 Done
 Xception Done
 
