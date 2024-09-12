@@ -2,7 +2,7 @@
 # Input : The path to root folder where [root_folder] contains .nii.gz files
 
 # This script should be run in the 3DSlicer python console with the command below
-# exec(open(r"C:\Users\acer\Desktop\Project_TMJOA\2D_Pipeline\2_segmentation.py").read())
+# exec(open(r"C:\Users\acer\Desktop\Project_TMJOA\2D_Pipeline\2_0_segmentation.py").read())
 
 import slicer
 from DentalSegmentatorLib import SegmentationWidget, ExportFormat

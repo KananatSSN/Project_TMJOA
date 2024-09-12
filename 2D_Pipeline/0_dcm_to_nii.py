@@ -9,7 +9,6 @@
 # Name construction function
 
 import os
-import pandas as pd
 import pydicom
 
 def get_dicom_metadata(file_path):
@@ -37,14 +36,14 @@ def construct_name(folder_path):
 
     meta = get_dicom_metadata(dcm_path)
 
-    return f"{meta['PatientID']}_{meta['StudyDate'][:4]}_{meta['StudyDate'][4:6]}_{meta['StudyDate'][6:8]}_{LR_tag}"
+    return f"{meta['PatientID'][:2]}-{meta['PatientID'][2:]}_{meta['StudyDate'][:4]}_{meta['StudyDate'][4:6]}_{meta['StudyDate'][6:8]}_{LR_tag}"
 
 ####################################################################################
 # Main loop
 from DICOMLib import DICOMUtils
 
-data_path = r"C:\Users\acer\Desktop\Back up\raw_Data_and_extra\Data"
-output_folder = r"C:\Users\acer\Desktop\Data_0"
+data_path = r"C:\Users\acer\Desktop\TMJOA\Raw_data_test"
+output_folder = r"C:\Users\acer\Desktop\TMJOA\Preprocessing\temp0"
 in_data_folder = os.listdir(data_path)
 
 for folder_name in in_data_folder:
