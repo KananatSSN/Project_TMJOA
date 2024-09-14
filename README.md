@@ -1,5 +1,4 @@
 # Automated detection of TMJOA with CBCT using AI/ML
-By Kananat Siangsano
 ## Installation
 1. Request data from kananat.ssn@gmail.com
 2. Download and install 3dslicer version 5.7.0 (or higher) from https://download.slicer.org/
