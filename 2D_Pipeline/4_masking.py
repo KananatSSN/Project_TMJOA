@@ -1,5 +1,5 @@
 # Run this program in 3dslicer Python Console with the command below
-# exec(open(r"C:\Users\acer\Desktop\Project_TMJOA\Phase_1.5\masking.py").read())
+# exec(open(r"C:\Users\kanan\Desktop\Project_TMJOA\2D_Pipeline\4_masking.py").read())
 
 import os
 
@@ -62,9 +62,9 @@ def segmentation_masking(volume_path, segmentation_path, output_folder):
 
 ###########################################################################################
 
-volume_folder = r"C:\Users\acer\Desktop\Data_0\Nii"
-segment_folder = r"C:\Users\acer\Desktop\Data_0\Segmentation\Filled"
-output_folder = r"C:\Users\acer\Desktop\Data_0\Nii_masked"
+volume_folder = r"D:\Kananat\Nii"
+segment_folder = r"D:\Kananat\Augmented_segmentation_dim1_expand10px"
+output_folder = r"D:\Kananat\Masked_dim1_expand10px"
 
 nii_count = len([filename for filename in os.listdir(volume_folder) if filename.endswith('.nii.gz')])
 print(f"There are {nii_count} .nii.gz files in the {volume_folder}")
@@ -80,7 +80,7 @@ for filename in files :
 
         volume_path = os.path.join(volume_folder, filename)
         segmentation_path = filename.split(".")[0]
-        segmentation_path = f"{segmentation_path}_segmented_filled.nii.gz"
+        segmentation_path = f"{segmentation_path}_segmented_augmented.nii.gz"
         segmentation_path = os.path.join(segment_folder,segmentation_path)
 
         if os.path.exists(volume_path) and os.path.exists(segmentation_path):
