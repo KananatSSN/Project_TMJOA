@@ -63,8 +63,8 @@ def segmentation_masking(volume_path, segmentation_path, output_folder):
 ###########################################################################################
 
 volume_folder = r"D:\Kananat\Nii"
-segment_folder = r"D:\Kananat\Augmented_segmentation_dim1_expand10px"
-output_folder = r"D:\Kananat\Masked_dim1_expand10px"
+segment_folder = r"D:\Kananat\Augmented_segmentation_dim1_expand5px"
+output_folder = r"D:\Kananat\Masked_dim1_expand5px"
 
 nii_count = len([filename for filename in os.listdir(volume_folder) if filename.endswith('.nii.gz')])
 print(f"There are {nii_count} .nii.gz files in the {volume_folder}")

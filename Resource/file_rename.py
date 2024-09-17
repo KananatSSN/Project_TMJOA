@@ -10,6 +10,6 @@ def rename_files(folder_path):
             print(f"Renamed: {filename} -> {new_filename}")
 
 # Replace this with the path to your folder
-folder_path = r"D:\Kananat\Augmented_segmentation_dim1_expand10px"
+folder_path = r"D:\Kananat\Augmented_segmentation_dim1_expand5px"
 
 rename_files(folder_path)
