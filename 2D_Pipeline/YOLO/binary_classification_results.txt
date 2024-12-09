@@ -1,0 +1,14 @@
+Binary Classification Results
+------------------------------
+Accuracy: 0.815
+Precision: 0.828
+Recall (Sensitivity): 0.785
+Specificity: 0.844
+F1 Score: 0.806
+
+Confusion Matrix
+------------------------------
+True Negatives: 3113
+False Positives: 575
+False Negatives: 756
+True Positives: 2761
