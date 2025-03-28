@@ -1,7 +1,7 @@
 import nibabel as nib
 import os
 
-def check_nifti_dimensions(file_path):
+def check_nifti(file_path):
     """
     Check the dimensions of a 3D image in .nii.gz format
     
