@@ -37,11 +37,11 @@ def process_cbct_image(input_file, crop_size=50, output_file=None, threshold=Non
         print(f"Using Otsu's threshold: {threshold}")
     
     # Convert to binary image
-    print("Converting to binary image...")
+    # print("Converting to binary image...")
     binary = data > threshold
     
     # Apply 3D skeletonization
-    print("Applying 3D skeletonization (this may take a while)...")
+    # print("Applying 3D skeletonization (this may take a while)...")
     skeleton = morphology.skeletonize(binary)
     
     # Find the endpoint closest to the reference point
@@ -51,7 +51,7 @@ def process_cbct_image(input_file, crop_size=50, output_file=None, threshold=Non
     print(f"Found closest endpoint at {endpoint}")
     
     # Crop the region around the endpoint
-    print(f"Cropping region of size {crop_size} around endpoint...")
+    # print(f"Cropping region of size {crop_size} around endpoint...")
     cropped_image, crop_coords = crop_around_point(data, endpoint, crop_size)
     
     # Save the full skeleton if requested
@@ -63,11 +63,11 @@ def process_cbct_image(input_file, crop_size=50, output_file=None, threshold=Non
     if output_file is None:
         output_file = f"{base}_cropped.nii.gz"
     
-    print(f"Saving cropped region to {output_file}...")
+    # print(f"Saving cropped region to {output_file}...")
     cropped_img = nib.Nifti1Image(cropped_image.astype(np.int16), affine, header)
     nib.save(cropped_img, output_file)
     
-    print(f"Crop coordinates: {crop_coords}")
+    # print(f"Crop coordinates: {crop_coords}")
     
     return skeleton, cropped_image, endpoint, crop_coords
 
@@ -174,8 +174,8 @@ def crop_around_point(image, point, crop_size):
 
 if __name__ == "__main__":
 
-    input_folder = r"D:\Arm\TMJOA\3_Registed"
-    output_folder = r"D:\Arm\TMJOA\4a_Skeleton"
+    input_folder = r"D:\Kananat\Data\3_Registed"
+    output_folder = r"D:\Kananat\Data\4_Cropped"
 
     nii_count = len([filename for filename in os.listdir(input_folder) if filename.endswith('.nii.gz')])
     print(f"There are {nii_count} .nii.gz files in the {input_folder}")
@@ -184,19 +184,19 @@ if __name__ == "__main__":
 
     files = sorted(os.listdir(input_folder))
 
-    for filename in files[0:2] :
+    for filename in files :
         if filename.endswith('.nii.gz'):
             progress_count += 1
             print(f"[Processing {progress_count} out of {nii_count}]")
 
             input_path = os.path.join(input_folder, filename)
 
-            output_filename = filename.replace('.nii.gz', '_cropped.nii.gz')
+            output_filename = filename.replace('_registered.nii.gz', '_cropped.nii.gz')
             output_path = os.path.join(output_folder, output_filename)
 
             if os.path.exists(input_path):
                 # Update crop_original_image function to use the specified crop size
-                process_cbct_image(input_file = input_path, crop_size=70, output_file=output_path, threshold=-3900)
+                process_cbct_image(input_file = input_path, crop_size=127, output_file=output_path, threshold=-3900)
                 print(f"Processed {filename} and saved to {output_path}")
 
     print("Done")
