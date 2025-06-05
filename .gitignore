@@ -4,3 +4,7 @@
 /3D_Pipeline/tf_results
 /For report
 /3D_Pipeline/keras with augment
+3D_Pipeline/densenet121_tiny_nonrotate_augment/densenet121_tiny_history.csv
+3D_Pipeline/densenet121_tiny_augmented/densenet121_tiny_history.csv
+3D_Pipeline/densenet121_tiny_augmented/densenet121_tiny_best.pth
+3D_Pipeline/densenet121_tiny_nonrotate_augment/densenet121_tiny_best.pth
