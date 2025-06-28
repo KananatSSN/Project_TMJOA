@@ -8,3 +8,5 @@
 3D_Pipeline/densenet121_tiny_augmented/densenet121_tiny_history.csv
 3D_Pipeline/densenet121_tiny_augmented/densenet121_tiny_best.pth
 3D_Pipeline/densenet121_tiny_nonrotate_augment/densenet121_tiny_best.pth
+3D_Pipeline/AI_code/tmj_results/checkpoints/tmj_model_best.pt
+3D_Pipeline/AI_code/tmj_results/checkpoints/tmj_model_training_log.csv
