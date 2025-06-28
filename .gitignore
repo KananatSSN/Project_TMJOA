@@ -8,3 +8,6 @@
 3D_Pipeline/densenet121_tiny_augmented/densenet121_tiny_history.csv
 3D_Pipeline/densenet121_tiny_augmented/densenet121_tiny_best.pth
 3D_Pipeline/densenet121_tiny_nonrotate_augment/densenet121_tiny_best.pth
+Phase_2.1/YOLO/yolo11m-cls.pt
+Phase_2.1/YOLO/runs/classify/train/weights/last.pt
+.gitignore
