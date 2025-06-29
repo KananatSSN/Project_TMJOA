@@ -1,5 +1,6 @@
-# exec(open(r"C:\Users\acer\Desktop\Project_TMJOA\Preprocessing\preprocessing.py").read())
+# exec(open(r"C:\Users\kanan\Desktop\Project_TMJOA\Preprocessing\preprocessing.py").read())
 
+import time
 import slicer
 import vtk
 import numpy as np
@@ -48,7 +49,7 @@ def segmentation(filepath, outputfolder):
     widget.exportSegmentation(singleSegmentationNode, outputfolder, selectedFormats)
 
     slicer.mrmlScene.Clear(0)
-    print(f"Finish processing {file_name}")
+    # print(f"Finish processing {file_name}")
 
 def expand_and_fill_holes_in_segmentation(input_file, output_folder, margin_pixels=5, fill_holes=True):
     """
@@ -139,9 +140,7 @@ def segmentation_masking(volume_path, segmentation_path, output_folder):
 
     # Load input volume and segmentation
     masterVolumeNode = slicer.util.loadVolume(volume_path)
-    print(0)
     segmentationNode = slicer.util.loadSegmentation(segmentation_path)
-    print(1)
     slicer.app.processEvents()
 
     # Create segment editor to get access to effects
@@ -183,7 +182,7 @@ def segmentation_masking(volume_path, segmentation_path, output_folder):
     slicer.mrmlScene.RemoveNode(masterVolumeNode)
     slicer.app.processEvents()
 
-    print(f"Finish processing {input_file_name}")
+    # print(f"Finish processing {input_file_name}")
 
 def skeletonized_cropping(input_file, crop_size=50, output_file=None, threshold=None):
     """
@@ -400,21 +399,23 @@ def preprocessing_single(input_file, result_folder, crop_size=112, threshold=-39
 
     print("\n")
 
-def batch_preprocessing(input_folder, result_folder, crop_size=112, threshold=-3999):
+def batch_preprocessing(input_folder, result_folder, start_from=0, crop_size=112, threshold=-3999):
 
     files = sorted(os.listdir(input_folder))
     files_count = len([filename for filename in files if filename.endswith('.nrrd')])
     print(f"Found {files_count} .nrrd files in {input_folder}")
 
-    progress_count = 0
-    for filename in files:
+    progress_count = start_from - 1
+    for filename in files[start_from:]:
         if filename.endswith('.nrrd'):
             input_file = os.path.join(input_folder, filename)
             progress_count += 1
             print(f"[Processing {progress_count} out of {files_count}]") # (Processesing)
             preprocessing_single(input_file, result_folder, crop_size=crop_size, threshold=threshold)
-            
-input_folder = r"C:\Users\acer\Desktop\Archieve\Open access data\Baseline\Baseline"
-result_folder = r"C:\Users\acer\Desktop\Archieve\Open access data\Baseline\result"
+            # time.sleep(300)
 
-batch_preprocessing(input_folder, result_folder, crop_size=112, threshold=-3999)
+resume_from = 19
+input_folder = r"D:\Kananat\Data\raw_Data_and_extra\Open access data\Baseline\Baseline"
+result_folder = r"D:\Kananat\Data\raw_Data_and_extra\Open access data\Baseline\Preprocessed_Baseline"
+
+batch_preprocessing(input_folder, result_folder, start_from = resume_from, crop_size=112, threshold=-3999)
