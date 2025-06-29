@@ -168,9 +168,7 @@ def crop_around_point(image, point, crop_size):
     # Crop the image
     cropped = image[x_min:x_max, y_min:y_max, z_min:z_max]
     
-    # Return both the cropped image and the crop coordinates
-    crop_coords = ((x_min, x_max), (y_min, y_max), (z_min, z_max))
-    return cropped, crop_coords
+    return cropped
 
 if __name__ == "__main__":
 
