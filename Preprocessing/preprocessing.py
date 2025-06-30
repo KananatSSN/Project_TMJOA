@@ -402,20 +402,20 @@ def preprocessing_single(input_file, result_folder, crop_size=112, threshold=-39
 def batch_preprocessing(input_folder, result_folder, start_from=0, crop_size=112, threshold=-3999):
 
     files = sorted(os.listdir(input_folder))
-    files_count = len([filename for filename in files if filename.endswith('.nrrd')])
-    print(f"Found {files_count} .nrrd files in {input_folder}")
+    files_count = len([filename for filename in files if (filename.endswith('.nrrd') or filename.endswith('.nii.gz'))])
+    print(f"Found {files_count} .nrrd/.nii.gz files in {input_folder}")
 
-    progress_count = start_from - 1
+    progress_count = start_from
     for filename in files[start_from:]:
-        if filename.endswith('.nrrd'):
+        if filename.endswith('.nii.gz') or filename.endswith('.nrrd'):
             input_file = os.path.join(input_folder, filename)
-            progress_count += 1
             print(f"[Processing {progress_count} out of {files_count}]") # (Processesing)
+            progress_count += 1
             preprocessing_single(input_file, result_folder, crop_size=crop_size, threshold=threshold)
             # time.sleep(300)
 
-resume_from = 19
-input_folder = r"D:\Kananat\Data\raw_Data_and_extra\Open access data\Baseline\Baseline"
-result_folder = r"D:\Kananat\Data\raw_Data_and_extra\Open access data\Baseline\Preprocessed_Baseline"
+resume_from = 126
+input_folder = r"D:\Kananat\Data\raw_Data_and_extra\Open access data\Follow_up\Follow_up"
+result_folder = r"D:\Kananat\Data\raw_Data_and_extra\Open access data\Follow_up\Preprocessed_Followup"
 
 batch_preprocessing(input_folder, result_folder, start_from = resume_from, crop_size=112, threshold=-3999)
