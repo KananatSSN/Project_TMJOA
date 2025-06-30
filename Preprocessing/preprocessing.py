@@ -1,4 +1,4 @@
-# exec(open(r"C:\Users\kanan\Desktop\Project_TMJOA\Preprocessing\preprocessing.py").read())
+# exec(open(r"C:\Users\acer\Desktop\Project_TMJOA\Preprocessing\preprocessing.py").read())
 
 import time
 import slicer
@@ -12,6 +12,64 @@ from skimage import morphology
 from skimage.filters import threshold_otsu
 from DentalSegmentatorLib import SegmentationWidget, ExportFormat
 import networkx as nx
+from DICOMLib import DICOMUtils
+import pydicom
+
+def get_dicom_metadata(file_path):
+    # Read the DICOM file
+    ds = pydicom.dcmread(file_path, force=True)
+    # Extract metadata
+    metadata = {
+        'PatientID': ds.get('PatientID', 'N/A'),
+        'StudyDate': ds.get('StudyDate', 'N/A')
+    }
+    return metadata
+
+def construct_name(folder_path):
+
+    dcm_path = os.path.join(folder_path,r"_Z\SLZ+000.dcm")
+
+    folder_name = os.path.basename(folder_path)
+
+    if 'L' in folder_name:
+        LR_tag = 'L'
+    elif 'R' in folder_name:
+        LR_tag = 'R'
+    else:
+        LR_tag = 'unknown'
+
+    meta = get_dicom_metadata(dcm_path)
+
+    return f"{meta['PatientID']}_{meta['StudyDate'][:4]}_{meta['StudyDate'][4:6]}_{meta['StudyDate'][6:8]}_{LR_tag}"
+
+def convert_dcm_to_nii(input_path, output_folder):
+    """
+    Load a volume from a file and return the node.
+    """
+    # Load the volume using Slicer's utility function
+    if not os.path.exists(input_path):
+        raise FileNotFoundError(f"The file {input_path} does not exist.")
+    
+    if os.path.isdir(input_path):
+        dicomDataDir = os.path.join(input_path,r"_Z")
+        loadedNodeIDs = []
+        with DICOMUtils.TemporaryDICOMDatabase() as db:
+            DICOMUtils.importDicom(dicomDataDir, db)
+            patientUIDs = db.patients()
+            for patientUID in patientUIDs:
+                loadedNodeIDs.extend(DICOMUtils.loadPatientByUID(patientUID))
+        node = slicer.mrmlScene.GetFirstNodeByClass("vtkMRMLScalarVolumeNode")
+        slicer.app.processEvents()
+
+        # Save node to .nii.gz
+        output_name = construct_name(input_path)
+        output_name = f"{output_name}.nii.gz"
+        output_path = os.path.join(output_folder,output_name)
+        slicer.util.saveNode(node, output_path)
+        slicer.app.processEvents()
+    
+    slicer.mrmlScene.Clear(0)
+    return output_path
 
 def segmentation(filepath, outputfolder):
 
@@ -50,6 +108,7 @@ def segmentation(filepath, outputfolder):
 
     slicer.mrmlScene.Clear(0)
     # print(f"Finish processing {file_name}")
+    return os.path.join(outputfolder, f"{file_name_without_extension}_segmentation.nii.gz")
 
 def expand_and_fill_holes_in_segmentation(input_file, output_folder, margin_pixels=5, fill_holes=True):
     """
@@ -135,6 +194,7 @@ def expand_and_fill_holes_in_segmentation(input_file, output_folder, margin_pixe
     output_file = os.path.join(output_folder, f"{file_name_without_extension}_segmentationEdited.nii.gz")
 
     nib.save(covered_img, output_file)
+    return output_file
 
 def segmentation_masking(volume_path, segmentation_path, output_folder):
 
@@ -174,17 +234,9 @@ def segmentation_masking(volume_path, segmentation_path, output_folder):
     slicer.util.saveNode(maskedVolume, output_path)
     slicer.app.processEvents()
 
-    # Reset 3dslicer memory
-    slicer.mrmlScene.RemoveNode(maskedVolume)
-    slicer.app.processEvents()
-    slicer.mrmlScene.RemoveNode(segmentationNode)
-    slicer.app.processEvents()
-    slicer.mrmlScene.RemoveNode(masterVolumeNode)
-    slicer.app.processEvents()
+    return output_path
 
-    # print(f"Finish processing {input_file_name}")
-
-def skeletonized_cropping(input_file, crop_size=50, output_file=None, threshold=None):
+def skeletonized_cropping(input_file, crop_size=50, output_folder=None, threshold=None):
     """
     Load a CBCT image, binarize it, apply 3D skeletonization, find the endpoint
     closest to (shape[0]//2, 0, 0), and crop around that point.
@@ -235,13 +287,11 @@ def skeletonized_cropping(input_file, crop_size=50, output_file=None, threshold=
     cropped_image[cropped_image == 0] = -4000  # Set background to -4000
     
     # Save the full skeleton if requested
-    base, ext = os.path.splitext(input_file)
-    if ext == '.gz':
-        base, _ = os.path.splitext(base)
+    file_name = os.path.basename(input_file)
+    file_name_without_extension = file_name.rsplit('_', 1)[0]
     
     # Save the cropped region
-    if output_file is None:
-        output_file = f"{base}_cropped.nii.gz"
+    output_file = os.path.join(output_folder,f"{file_name_without_extension}_cropped.nii.gz")
     
     # print(f"Saving cropped region to {output_file}...")
     cropped_img = nib.Nifti1Image(cropped_image.astype(np.int16), affine, header)
@@ -249,7 +299,7 @@ def skeletonized_cropping(input_file, crop_size=50, output_file=None, threshold=
     
     # print(f"Crop coordinates: {crop_coords}")
     
-    return skeleton, cropped_image, endpoint
+    return output_file
 
 def find_closest_endpoint(skeleton, reference_point):
     """
@@ -353,7 +403,7 @@ def crop_around_point(image, point, crop_size):
 
 def preprocessing_single(input_file, result_folder, crop_size=112, threshold=-3999):
 
-    step_folder = ['Segmentation','Edited_Segmentation', 'Masked', 'Cropped']
+    step_folder = ['Nii','Segmentation','Edited_Segmentation', 'Masked', 'Cropped']
     for folder in step_folder:
         os.makedirs(os.path.join(result_folder, folder), exist_ok=True)
     
@@ -361,14 +411,21 @@ def preprocessing_single(input_file, result_folder, crop_size=112, threshold=-39
     file_name_without_extension = file_name.split('.')[0]
 
     total_steps = 4
+
+    # Step 0: Convert DICOM to NIfTI if necessary
+    if os.path.isdir(input_file):
+        # Convert DICOM to NIfTI
+        nii_folder = os.path.join(result_folder, 'Nii')
+        nii_file = convert_dcm_to_nii(input_file, nii_folder)
+        input_file = nii_file
+
     # Step 1: Segmentation
     step = 1
     bar= '▓' * step + '░' * (total_steps - step)
     print(f"Processing {file_name_without_extension} [{bar}]", end='\r')
     slicer.mrmlScene.Clear(0)
     segmentation_folder = os.path.join(result_folder, 'Segmentation')
-    segmentation_file = os.path.join(segmentation_folder, f"{file_name_without_extension}_segmentation.nii.gz")
-    segmentation(input_file, segmentation_folder)
+    segmented_file = segmentation(input_file, segmentation_folder)
 
     # # Step 2: Augment segmentation
     step = 2
@@ -376,8 +433,7 @@ def preprocessing_single(input_file, result_folder, crop_size=112, threshold=-39
     print(f"Processing {file_name_without_extension} [{bar}]", end='\r')
     slicer.mrmlScene.Clear(0)
     edited_folder = os.path.join(result_folder, 'Edited_Segmentation')
-    edited_file = os.path.join(edited_folder, f"{file_name_without_extension}_segmentationEdited.nii.gz")
-    expand_and_fill_holes_in_segmentation(segmentation_file, edited_folder, margin_pixels=5, fill_holes=True)
+    editedSegment_file =expand_and_fill_holes_in_segmentation(segmented_file, edited_folder, margin_pixels=5, fill_holes=True)
 
     # Step 3: Masking
     step = 3
@@ -385,8 +441,7 @@ def preprocessing_single(input_file, result_folder, crop_size=112, threshold=-39
     print(f"Processing {file_name_without_extension} [{bar}]", end='\r')
     slicer.mrmlScene.Clear(0)
     masked_folder = os.path.join(result_folder, 'Masked')
-    masked_file = os.path.join(masked_folder, f"{file_name_without_extension}_masked.nii.gz")
-    segmentation_masking(input_file, edited_file, masked_folder)
+    masked_file = segmentation_masking(input_file, editedSegment_file, masked_folder)
 
     # Step 4: Skeletonization and cropping
     step = 4
@@ -394,28 +449,27 @@ def preprocessing_single(input_file, result_folder, crop_size=112, threshold=-39
     print(f"Processing {file_name_without_extension} [{bar}]", end='\r')
     slicer.mrmlScene.Clear(0)
     cropped_folder = os.path.join(result_folder, 'Cropped')
-    cropped_file = os.path.join(cropped_folder, f"{file_name_without_extension}_cropped.nii.gz")
-    skeletonized_cropping(masked_file, crop_size=crop_size, output_file=cropped_file, threshold=threshold)
+    skeletonized_cropping(masked_file, crop_size=crop_size, output_folder=cropped_folder, threshold=threshold)
 
     print("\n")
 
 def batch_preprocessing(input_folder, result_folder, start_from=0, crop_size=112, threshold=-3999):
 
     files = sorted(os.listdir(input_folder))
-    files_count = len([filename for filename in files if filename.endswith('.nrrd')])
-    print(f"Found {files_count} .nrrd files in {input_folder}")
+    # files_count = len([filename for filename in files if filename.endswith('.nrrd')])
+    # print(f"Found {files_count} .nrrd files in {input_folder}")
 
-    progress_count = start_from - 1
+    progress_count = start_from
     for filename in files[start_from:]:
-        if filename.endswith('.nrrd'):
+        if filename:
             input_file = os.path.join(input_folder, filename)
+            # print(f"[Processing {progress_count} out of {files_count}]") # (Processesing)
             progress_count += 1
-            print(f"[Processing {progress_count} out of {files_count}]") # (Processesing)
             preprocessing_single(input_file, result_folder, crop_size=crop_size, threshold=threshold)
-            # time.sleep(300)
 
-resume_from = 19
-input_folder = r"D:\Kananat\Data\raw_Data_and_extra\Open access data\Baseline\Baseline"
-result_folder = r"D:\Kananat\Data\raw_Data_and_extra\Open access data\Baseline\Preprocessed_Baseline"
+resume_from = 0
+input_folder = r"C:\Users\acer\Desktop\Back up\raw_Data_and_extra\raw_Data_and_extra\More_data"
+result_folder = r"C:\Users\acer\Desktop\Back up\raw_Data_and_extra\raw_Data_and_extra\Preprocessed_MoreData"
 
 batch_preprocessing(input_folder, result_folder, start_from = resume_from, crop_size=112, threshold=-3999)
+# preprocessing_single(input_folder, result_folder, crop_size=112, threshold=-3999)

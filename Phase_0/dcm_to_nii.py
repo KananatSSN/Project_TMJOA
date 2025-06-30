@@ -4,7 +4,6 @@
 # Name construction function
 
 import os
-import pandas as pd
 import pydicom
 
 def get_dicom_metadata(file_path):
