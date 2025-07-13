@@ -13,3 +13,7 @@ Phase_2.1/YOLO/runs/classify/train/weights/last.pt
 .gitignore
 3D_Pipeline/AI_code/tmj_results/checkpoints/tmj_model_best.pt
 3D_Pipeline/AI_code/tmj_results/checkpoints/tmj_model_training_log.csv
+/runs
+/Output
+yolo11m-cls.pt
+yolo11n.pt

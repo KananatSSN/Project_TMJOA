@@ -12,7 +12,7 @@ import json
 import pandas as pd
 from datetime import datetime
 import torch.nn.functional as F
-
+from augmentation_3d import CBCTRandAugment
 
 class NiftiDataset(Dataset):
     """Custom dataset for loading .nii.gz files"""
@@ -65,6 +65,12 @@ class NiftiDataset(Dataset):
         # Convert to tensor and add channel dimension
         image = torch.from_numpy(image).float().unsqueeze(0)  # Shape: (1, D, H, W)
         
+        # print(f"Shape {image.shape} ")
+        # print(f"ndim {image.ndim} ")
+        # print(f"max {image.max()} ")
+        # print(f"min {image.min()} ")
+        # print(f"dtype {image.dtype} ")
+
         if self.transform:
             image = self.transform(image)
         
@@ -549,7 +555,7 @@ def main():
         config['mixed_precision'] = False
     
     # Data transforms
-    train_transform = SimpleTransform(prob=0.5)
+    train_transform = CBCTRandAugment(n=3, m=1)
     
     # Create datasets
     print("Loading datasets...")
@@ -605,7 +611,7 @@ def main():
         input_size=config['target_size'],
         width=2,
         num_classes=2,
-        dropout_rate=0.3
+        dropout_rate=0.1
     )
     
     # Print model info
