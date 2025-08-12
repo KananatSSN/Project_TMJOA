@@ -1,7 +1,7 @@
 import nibabel as nib
 import os
 
-def check_nifti_dimensions(file_path):
+def check_nifti(file_path):
     """
     Check the dimensions of a 3D image in .nii.gz format
     
@@ -49,3 +49,37 @@ def check_nifti_dimensions(file_path):
         'data_type': str(data_type),
         'affine': affine
     }
+
+def define_background(input_path, output_path, range=[-250, 1500], background_value=-250):
+    """
+    Define the background of a NIfTI image by setting values outside a specified range to a background value.
+    
+    Parameters:
+    -----------
+    input_path : str
+        Path to the input NIfTI file
+    output_path : str
+        Path to save the modified NIfTI file
+    range : tuple
+        Range of values to keep in the image (default: (-250, 1500))
+    background_value : int or float
+        Value to set for the background (default: 0)
+        
+    Returns:
+    --------
+    None
+    """
+    # Load the NIfTI image
+    img = nib.load(input_path)
+    
+    # Get the image data
+    data = img.get_fdata()
+    
+    # Set values outside the specified range to the background value
+    data[(data < range[0]) | (data > range[1])] = background_value
+    
+    # Create a new NIfTI image with the modified data
+    new_img = nib.Nifti1Image(data, img.affine, img.header)
+    
+    # Save the new image
+    nib.save(new_img, output_path)

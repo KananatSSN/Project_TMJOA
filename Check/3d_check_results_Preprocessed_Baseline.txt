@@ -1,0 +1,7 @@
+003_right_baseline_cropped.nii.gz
+006_right_baseline_cropped.nii.gz
+021_left_baseline_mirror_cropped.nii.gz
+023_right_baseline_cropped.nii.gz
+035_right_baseline_cropped.nii.gz
+038_left_baseline_mirrored_cropped.nii.gz
+099_right_baseline_cropped.nii.gz

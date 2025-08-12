@@ -5,8 +5,8 @@ import slicer
 from slicer.ScriptedLoadableModule import *
 
 # Define the folder containing the .nii files
-input_folder = r"D:\Kananat\Masked_dim1"
-output_file = r"D:\Kananat\Problem_file.txt"
+input_folder = r"D:\Kananat\Data\raw_Data_and_extra\Open access data\Baseline\Preprocessed_Baseline\Preprocessed"
+output_file = r"C:\Users\kanan\Desktop\Project_TMJOA\Check\3d_check_results_Preprocessed_FollowUp.txt"
 
 with open(output_file, 'w') as log_file:
     log_file.write('')  # Optionally write a header or leave it completely empty
