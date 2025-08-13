@@ -30,9 +30,12 @@ import os
 import math
 import time
 import sys
+import gc
 from pathlib import Path
 import shutil
 from typing import List, Tuple
+import psutil
+import warnings
 
 class MultiViewGenerator:
     def __init__(self, nifti_path, threshold_percentile=95):
@@ -46,26 +49,65 @@ class MultiViewGenerator:
         self.nifti_path = nifti_path
         self.threshold_percentile = threshold_percentile
         self.img_data = None
+        self.img_data_thresholded = None
         self.affine = None
         self.header = None
         self._pre_calculated_surface = None
+        self._nib_image = None  # Keep reference to nibabel image for proper cleanup
         
         self.load_nifti()
     
     def load_nifti(self):
-        """Load NIfTI image data"""
+        """Load NIfTI image data with memory monitoring and robust error handling"""
         try:
-            nii_img = nib.load(self.nifti_path)
-            self.img_data = nii_img.get_fdata()
-            self.affine = nii_img.affine
-            self.header = nii_img.header
+            # Check if file exists and is readable
+            if not os.path.exists(self.nifti_path):
+                raise FileNotFoundError(f"File not found: {self.nifti_path}")
             
+            if not os.access(self.nifti_path, os.R_OK):
+                raise PermissionError(f"File not readable: {self.nifti_path}")
+            
+            # Monitor memory before loading
+            process = psutil.Process(os.getpid())
+            mem_before = process.memory_info().rss / 1024 / 1024  # MB
+            
+            # Load with explicit error handling for different failure modes
+            try:
+                self._nib_image = nib.load(self.nifti_path)
+            except Exception as load_error:
+                raise Exception(f"Could not read file: {self.nifti_path}. Nibabel error: {str(load_error)}")
+            
+            try:
+                # Use float32 to save memory, with explicit dtype conversion
+                self.img_data = self._nib_image.get_fdata(dtype=np.float32, caching='unchanged')
+                if self.img_data is None:
+                    raise ValueError("Image data is None")
+                    
+            except Exception as data_error:
+                raise Exception(f"Could not extract image data: {str(data_error)}")
+            
+            # Copy metadata
+            try:
+                self.affine = self._nib_image.affine.copy()
+                self.header = self._nib_image.header.copy()
+            except Exception as meta_error:
+                warnings.warn(f"Could not copy metadata: {str(meta_error)}")
+                self.affine = np.eye(4)
+                self.header = None
+            
+            mem_after = process.memory_info().rss / 1024 / 1024  # MB
             print(f"Loaded NIfTI image: {os.path.basename(self.nifti_path)}")
             print(f"Shape: {self.img_data.shape}")
             print(f"Value range: {self.img_data.min():.2f} to {self.img_data.max():.2f}")
+            print(f"Memory usage: {mem_after - mem_before:.1f} MB")
             
         except Exception as e:
-            raise Exception(f"Error loading NIfTI file: {str(e)}")
+            self.cleanup()
+            # Re-raise with more context
+            error_msg = f"Error loading NIfTI file: {str(e)}"
+            if "Could not read file" not in str(e):
+                error_msg = f"Error loading NIfTI file: Could not read file: {self.nifti_path}"
+            raise Exception(error_msg)
     
     def preprocess_data(self, downsample_factor=2, flip_upside_down=True):
         """
@@ -427,12 +469,68 @@ class MultiViewGenerator:
                         print(f"  Error saving {filepath}: {str(e)}")
                         if "kaleido" in str(e).lower():
                             print("  Install kaleido package: pip install kaleido")
+                    finally:
+                        # Clean up figure to prevent memory leaks
+                        del fig
+                        gc.collect()
         
-        # Clean up pre-calculated data
-        self._pre_calculated_surface = None
+        # Clean up pre-calculated data and force garbage collection
+        self.cleanup_surface_data()
+        self._force_garbage_collection()
         
         print(f"Multi-view capture complete! Generated {len(image_paths)} images in {output_dir}")
         return image_paths
+    
+    def cleanup_surface_data(self):
+        """Clean up pre-calculated surface data"""
+        if self._pre_calculated_surface is not None:
+            self._pre_calculated_surface.clear()
+            self._pre_calculated_surface = None
+    
+    def cleanup(self):
+        """Clean up all resources and memory"""
+        # Clean up image data
+        if self.img_data is not None:
+            del self.img_data
+            self.img_data = None
+        
+        if self.img_data_thresholded is not None:
+            del self.img_data_thresholded
+            self.img_data_thresholded = None
+        
+        # Clean up nibabel image
+        if self._nib_image is not None:
+            del self._nib_image
+            self._nib_image = None
+        
+        # Clean up surface data
+        self.cleanup_surface_data()
+        
+        # Clean up other references
+        self.affine = None
+        self.header = None
+        
+        # Force garbage collection
+        self._force_garbage_collection()
+    
+    def _force_garbage_collection(self):
+        """Force garbage collection and report memory usage"""
+        gc.collect()
+        
+        # Optional: Report current memory usage
+        try:
+            process = psutil.Process(os.getpid())
+            mem_usage = process.memory_info().rss / 1024 / 1024  # MB
+            print(f"Current memory usage: {mem_usage:.1f} MB")
+        except:
+            pass
+    
+    def __del__(self):
+        """Destructor to ensure cleanup"""
+        try:
+            self.cleanup()
+        except:
+            pass
 
 
 class BatchProcessor:
@@ -477,8 +575,13 @@ class BatchProcessor:
                           image_size: int = 640, downsample: int = 1,
                           flip_upside_down: bool = True) -> bool:
         """Process a single NIfTI file and return success status"""
+        generator = None
         try:
             print(f"Processing: {os.path.basename(input_file)}")
+            
+            # Check memory before processing
+            process = psutil.Process(os.getpid())
+            mem_before = process.memory_info().rss / 1024 / 1024  # MB
             
             # Initialize generator
             generator = MultiViewGenerator(input_file)
@@ -497,6 +600,16 @@ class BatchProcessor:
                 image_size=image_size
             )
             
+            # Clean up generator
+            generator.cleanup()
+            generator = None
+            
+            # Force garbage collection after processing
+            gc.collect()
+            
+            mem_after = process.memory_info().rss / 1024 / 1024  # MB
+            print(f"  Memory used: {mem_after - mem_before:.1f} MB")
+            
             if image_paths:
                 print(f"  Success: Generated {len(image_paths)} images")
                 return True
@@ -507,6 +620,15 @@ class BatchProcessor:
         except Exception as e:
             print(f"  Error processing {input_file}: {str(e)}")
             return False
+        finally:
+            # Ensure cleanup even if exception occurs
+            if generator is not None:
+                try:
+                    generator.cleanup()
+                except:
+                    pass
+            # Final garbage collection
+            gc.collect()
     
     def process_batch(self, input_root: str, output_root: str,
                      rotation_step: int = 45, elevation_step: int = 30,
@@ -543,45 +665,86 @@ class BatchProcessor:
         for i, (input_file, relative_path) in enumerate(nifti_files, 1):
             print(f"\n[{i}/{self.total_files}] Processing: {relative_path}")
             
-            # Get the class directory (parent directory of the .nii.gz file)
-            relative_path_obj = Path(relative_path)
-            class_dir = relative_path_obj.parent  # This will be something like 'train/0' or 'val/1'
-            output_class_dir = Path(output_root) / class_dir
-            output_class_dir.mkdir(parents=True, exist_ok=True)
-            
-            # Process the file - images will go directly into the class directory
-            success = self.process_single_file(
-                input_file=input_file,
-                output_dir=str(output_class_dir),
-                rotation_step=rotation_step,
-                elevation_step=elevation_step,
-                image_size=image_size,
-                downsample=downsample,
-                flip_upside_down=flip_upside_down
-            )
+            try:
+                # Get the class directory (parent directory of the .nii.gz file)
+                relative_path_obj = Path(relative_path)
+                class_dir = relative_path_obj.parent  # This will be something like 'train/0' or 'val/1'
+                output_class_dir = Path(output_root) / class_dir
+                output_class_dir.mkdir(parents=True, exist_ok=True)
+                
+                # Validate input file before processing
+                if not os.path.exists(input_file):
+                    print(f"  ERROR: Input file not found: {input_file}")
+                    self.failed_files += 1
+                    self.failed_list.append(relative_path)
+                    continue
+                
+                # Check file size (very small files might be corrupted)
+                file_size = os.path.getsize(input_file)
+                if file_size < 1024:  # Less than 1KB is suspicious
+                    print(f"  WARNING: File size is very small ({file_size} bytes): {input_file}")
+                
+                # Process the file - images will go directly into the class directory
+                success = self.process_single_file(
+                    input_file=input_file,
+                    output_dir=str(output_class_dir),
+                    rotation_step=rotation_step,
+                    elevation_step=elevation_step,
+                    image_size=image_size,
+                    downsample=downsample,
+                    flip_upside_down=flip_upside_down
+                )
+                
+            except Exception as processing_error:
+                print(f"  ERROR: Unexpected error during processing setup: {str(processing_error)}")
+                success = False
             
             if success:
                 self.processed_files += 1
+                print(f"  ✓ Successfully processed: {relative_path}")
             else:
                 self.failed_files += 1
                 self.failed_list.append(relative_path)
+                print(f"  ✗ Failed to process: {relative_path}")
             
-            # Progress update
+            # Progress update with memory monitoring
             elapsed_time = time.time() - start_time
             avg_time_per_file = elapsed_time / i
             remaining_files = self.total_files - i
             estimated_remaining_time = remaining_files * avg_time_per_file
             
+            # Monitor memory usage
+            try:
+                process = psutil.Process(os.getpid())
+                mem_usage = process.memory_info().rss / 1024 / 1024  # MB
+                mem_info = f", Memory: {mem_usage:.1f} MB"
+            except:
+                mem_info = ""
+            
             print(f"  Progress: {i}/{self.total_files} files processed")
             print(f"  Success: {self.processed_files}, Failed: {self.failed_files}")
-            print(f"  Elapsed: {elapsed_time:.1f}s, ETA: {estimated_remaining_time:.1f}s")
+            print(f"  Elapsed: {elapsed_time:.1f}s, ETA: {estimated_remaining_time:.1f}s{mem_info}")
+            
+            # Force garbage collection every 10 files to prevent memory buildup
+            if i % 10 == 0:
+                print(f"  Performing memory cleanup...")
+                gc.collect()
+                
+            # Check for high memory usage and warn
+            try:
+                mem_usage_gb = process.memory_info().rss / 1024 / 1024 / 1024
+                if mem_usage_gb > 8.0:  # Warn if using more than 8GB
+                    print(f"  WARNING: High memory usage detected: {mem_usage_gb:.1f} GB")
+            except:
+                pass
         
-        # Final summary
+        # Final cleanup and summary
+        gc.collect()  # Final garbage collection
         total_time = time.time() - start_time
         self._print_final_summary(total_time)
     
     def _print_final_summary(self, total_time: float) -> None:
-        """Print final processing summary"""
+        """Print final processing summary with memory info"""
         print("\n" + "=" * 80)
         print("BATCH PROCESSING COMPLETE")
         print("=" * 80)
@@ -592,10 +755,23 @@ class BatchProcessor:
         print(f"Total processing time: {total_time:.1f} seconds")
         print(f"Average time per file: {total_time/self.total_files:.1f} seconds")
         
+        # Final memory report
+        try:
+            process = psutil.Process(os.getpid())
+            final_mem = process.memory_info().rss / 1024 / 1024  # MB
+            print(f"Final memory usage: {final_mem:.1f} MB")
+        except:
+            pass
+        
         if self.failed_list:
             print("\nFailed files:")
             for failed_file in self.failed_list:
                 print(f"  - {failed_file}")
+            print("\n💡 Troubleshooting tips for failed files:")
+            print("  - Check if files are corrupted or incomplete")
+            print("  - Verify file permissions")
+            print("  - Ensure sufficient disk space in output directory")
+            print("  - Try processing failed files individually for detailed error messages")
         
         print("=" * 80)
 
