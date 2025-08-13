@@ -306,17 +306,32 @@ class MultiViewGenerator:
                 data_for_surface = self.img_data_thresholded
             
             # Determine iso value
-            unique_vals = np.unique(data_for_surface)
+            # Remove NaN values first to prevent conversion errors
+            data_clean = data_for_surface[~np.isnan(data_for_surface)]
+            
+            if len(data_clean) == 0:
+                print("Warning: All data is NaN, cannot generate surface")
+                return None
+            
+            unique_vals = np.unique(data_clean)
             if len(unique_vals) <= 2 and np.allclose(unique_vals, [0, 1]):
                 iso_value = 0.5
             else:
-                min_val = data_for_surface[data_for_surface > 0].min()
-                max_val = data_for_surface.max()
-                iso_value = min_val + (max_val - min_val) * 0.01
+                positive_vals = data_clean[data_clean > 0]
+                if len(positive_vals) > 0:
+                    min_val = positive_vals.min()
+                    max_val = data_clean.max()
+                    iso_value = min_val + (max_val - min_val) * 0.01
+                else:
+                    # If no positive values, use a small positive threshold
+                    iso_value = data_clean.max() * 0.01 if data_clean.max() > 0 else 0.01
             
             # Generate surface
+            # Replace NaN values with 0 for marching cubes algorithm
+            data_for_surface_clean = np.nan_to_num(data_for_surface, nan=0.0)
+            
             verts, faces, normals, _ = measure.marching_cubes(
-                data_for_surface, 
+                data_for_surface_clean, 
                 level=iso_value,
                 step_size=1
             )
