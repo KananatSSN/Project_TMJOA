@@ -174,8 +174,13 @@ class MultiViewGenerator:
             if i % 10000 == 0:
                 print(f"Processing vertex {i}/{len(vertices)}")
             
-            # Normalize the surface normal
-            normal = normal / np.linalg.norm(normal)
+            # Normalize the surface normal with zero-magnitude protection
+            normal_magnitude = np.linalg.norm(normal)
+            if normal_magnitude < 1e-10:  # Very small epsilon to catch near-zero normals
+                # Skip this vertex or use a default normal (pointing up)
+                colors[i] = 0.0  # Assign default color for problematic vertices
+                continue
+            normal = normal / normal_magnitude
             
             # Sample points along the normal in both directions
             intensities = []
@@ -217,6 +222,10 @@ class MultiViewGenerator:
     def _interpolate_intensity(self, point, data):
         """Trilinear interpolation for smooth intensity sampling"""
         x, y, z = point
+        
+        # Check for NaN values in coordinates
+        if np.isnan(x) or np.isnan(y) or np.isnan(z):
+            return 0.0
         
         # Check bounds
         if (x < 0 or x >= data.shape[0] - 1 or 
