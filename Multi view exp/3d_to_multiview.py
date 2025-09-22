@@ -54,6 +54,8 @@ class MultiViewGenerator:
         self.header = None
         self._pre_calculated_surface = None
         self._nib_image = None  # Keep reference to nibabel image for proper cleanup
+        self.DEPTH_SAMPLES = 20
+        self.OUTLIER_PERCENT = 50.0
         
         self.load_nifti()
     
@@ -96,10 +98,10 @@ class MultiViewGenerator:
                 self.header = None
             
             mem_after = process.memory_info().rss / 1024 / 1024  # MB
-            print(f"Loaded NIfTI image: {os.path.basename(self.nifti_path)}")
-            print(f"Shape: {self.img_data.shape}")
-            print(f"Value range: {self.img_data.min():.2f} to {self.img_data.max():.2f}")
-            print(f"Memory usage: {mem_after - mem_before:.1f} MB")
+            # print(f"Loaded NIfTI image: {os.path.basename(self.nifti_path)}")
+            # print(f"Shape: {self.img_data.shape}")
+            # print(f"Value range: {self.img_data.min():.2f} to {self.img_data.max():.2f}")
+            # print(f"Memory usage: {mem_after - mem_before:.1f} MB")
             
         except Exception as e:
             self.cleanup()
@@ -119,7 +121,7 @@ class MultiViewGenerator:
         """
         # Flip volume upside down (default enabled for medical imaging)
         if flip_upside_down:
-            print("Flipping volume upside down...")
+            # print("Flipping volume upside down...")
             self.img_data = np.flip(self.img_data, axis=2)
         
         # Downsample for performance if needed
@@ -127,7 +129,7 @@ class MultiViewGenerator:
             self.img_data = self.img_data[::downsample_factor, 
                                         ::downsample_factor, 
                                         ::downsample_factor]
-            print(f"Downsampled to shape: {self.img_data.shape}")
+            # print(f"Downsampled to shape: {self.img_data.shape}")
         
         # Apply threshold to focus on relevant structures
         min_val = self.img_data.min()
@@ -135,7 +137,7 @@ class MultiViewGenerator:
         # If minimum value is -250, use it as exact threshold for informative voxels
         if min_val == -250:
             threshold = -250
-            print(f"Using exact background threshold: {threshold:.1f}")
+            # print(f"Using exact background threshold: {threshold:.1f}")
         elif min_val < -100:
             print(f"Detected background value: {min_val:.1f}")
             background_threshold = min_val + 50
@@ -155,14 +157,13 @@ class MultiViewGenerator:
             print(f"Using percentile threshold: {threshold:.4f}")
         
         self.img_data_thresholded = np.where(self.img_data > threshold, self.img_data, 0)
-        print(f"Non-zero voxels after thresholding: {np.count_nonzero(self.img_data_thresholded)}")
+        # print(f"Non-zero voxels after thresholding: {np.count_nonzero(self.img_data_thresholded)}")
     
     def _calculate_depth_sum_colors(self, vertices, normals, depth_samples, remove_outliers=True, outlier_percent=10.0):
         """
         Calculate depth-sum intensity colors for surface vertices
         """
-        print("Calculating bidirectional depth-average colors...")
-        print(f"Sampling {depth_samples} voxels outward + surface + {depth_samples} voxels inward = {2*depth_samples+1} total samples")
+        # print(f"Sampling {depth_samples} voxels inward from surface")
         
         # Recenter the data so minimum value becomes 0
         min_val = self.img_data.min()
@@ -171,8 +172,8 @@ class MultiViewGenerator:
         colors = np.zeros(len(vertices))
         
         for i, (vertex, normal) in enumerate(zip(vertices, normals)):
-            if i % 10000 == 0:
-                print(f"Processing vertex {i}/{len(vertices)}")
+            # if i % 10000 == 0:
+            #     print(f"Processing vertex {i}/{len(vertices)}")
             
             # Normalize the surface normal with zero-magnitude protection
             normal_magnitude = np.linalg.norm(normal)
@@ -185,36 +186,26 @@ class MultiViewGenerator:
             # Sample points along the normal in both directions
             intensities = []
             
-            # Sample outward from surface
+            # Sample inward from surface
             for d in range(-depth_samples, 0):
                 sample_point = vertex + normal * d
                 intensity = self._interpolate_intensity(sample_point, recentered_data)
                 intensities.append(intensity)
             
-            # Add the surface vertex itself
-            intensity = self._interpolate_intensity(vertex, recentered_data)
-            intensities.append(intensity)
-            
-            # Sample inward from surface
-            for d in range(1, depth_samples + 1):
-                sample_point = vertex + normal * d
-                intensity = self._interpolate_intensity(sample_point, recentered_data)
-                intensities.append(intensity)
-            
             # Average the intensities
+            # print(f"Vertex {i}: Sampled intensities: {intensities}")
             colors[i] = np.mean(intensities) if intensities else 0
         
-        print(f"Bidirectional depth-average color range: {colors.min():.2f} to {colors.max():.2f}")
+        # print(f"Color range: {colors.min():.2f} to {colors.max():.2f}")
         
         if remove_outliers:
             # Remove outliers by boundary clamping
-            half_outlier = outlier_percent / 2.0
-            lower_bound = np.percentile(colors, half_outlier)
-            upper_bound = np.percentile(colors, 100.0 - half_outlier)
+            lower_bound = np.percentile(colors, 10)
+            upper_bound = np.percentile(colors, 100.0 - outlier_percent)
             
             colors_clipped = np.clip(colors, lower_bound, upper_bound)
             
-            print(f"Outlier removal: clamped to [{lower_bound:.2f}, {upper_bound:.2f}]")
+            # print(f"Outlier removal: clamped to [{lower_bound:.2f}, {upper_bound:.2f}]")
             return colors_clipped
         else:
             return colors
@@ -305,7 +296,7 @@ class MultiViewGenerator:
     
     def _calculate_surface_data(self):
         """Pre-calculate 3D surface data for optimization"""
-        print("Pre-calculating 3D surface data...")
+        # print("Pre-calculating 3D surface data...")
         
         try:
             # Create isosurface using marching cubes
@@ -345,14 +336,14 @@ class MultiViewGenerator:
                 step_size=1
             )
             
-            print(f"Pre-calculated surface: {len(verts)} vertices, {len(faces)} faces")
+            # print(f"Pre-calculated surface: {len(verts)} vertices, {len(faces)} faces")
             
             # Calculate depth colors
             colors = self._calculate_depth_sum_colors(
                 verts, normals, 
-                depth_samples=15,  # Fixed depth samples for optimal results
+                depth_samples=self.DEPTH_SAMPLES,  # Fixed depth samples for optimal results
                 remove_outliers=True,
-                outlier_percent=10.0
+                outlier_percent=self.OUTLIER_PERCENT
             )
             
             # Apply color mapping
@@ -443,7 +434,7 @@ class MultiViewGenerator:
         Returns:
             List of generated image file paths
         """
-        print(f"Generating multi-view images with {rotation_step}° azimuth and {elevation_step}° elevation steps...")
+        # print(f"Generating multi-view images with {rotation_step}° azimuth and {elevation_step}° elevation steps...")
         
         # Pre-calculate the 3D surface once
         self._pre_calculated_surface = self._calculate_surface_data()
@@ -457,7 +448,7 @@ class MultiViewGenerator:
         
         # Calculate angles
         azimuth_angles = list(range(0, 360, rotation_step))
-        elevation_angles = list(range(15, 91, elevation_step))
+        elevation_angles = list(range(0, 91, elevation_step))
         total_images = len(azimuth_angles) * len(elevation_angles)
         image_paths = []
         
@@ -465,13 +456,13 @@ class MultiViewGenerator:
         base_filename = os.path.basename(self.nifti_path)
         base_filename = base_filename.split('_')[0]
         
-        print(f"Will generate {total_images} images ({len(azimuth_angles)} azimuth × {len(elevation_angles)} elevation angles)")
+        # print(f"Will generate {total_images} images ({len(azimuth_angles)} azimuth × {len(elevation_angles)} elevation angles)")
         
         image_count = 0
         for elevation in elevation_angles:
             for azimuth in azimuth_angles:
                 image_count += 1
-                print(f"Capturing view {image_count}/{total_images} - Azimuth: {azimuth}°, Elevation: {elevation}°")
+                # print(f"Capturing view {image_count}/{total_images} - Azimuth: {azimuth}°, Elevation: {elevation}°")
                 
                 # Calculate camera position
                 camera_pos = self._calculate_camera_position(azimuth, elevation)
@@ -488,7 +479,7 @@ class MultiViewGenerator:
                     try:
                         fig.write_image(filepath, width=image_size, height=image_size)
                         image_paths.append(filepath)
-                        print(f"  Saved: {filepath}")
+                        # print(f"  Saved: {filepath}")
                     except Exception as e:
                         print(f"  Error saving {filepath}: {str(e)}")
                         if "kaleido" in str(e).lower():
@@ -502,7 +493,7 @@ class MultiViewGenerator:
         self.cleanup_surface_data()
         self._force_garbage_collection()
         
-        print(f"Multi-view capture complete! Generated {len(image_paths)} images in {output_dir}")
+        # print(f"Multi-view capture complete! Generated {len(image_paths)} images in {output_dir}")
         return image_paths
     
     def cleanup_surface_data(self):
@@ -545,7 +536,7 @@ class MultiViewGenerator:
         try:
             process = psutil.Process(os.getpid())
             mem_usage = process.memory_info().rss / 1024 / 1024  # MB
-            print(f"Current memory usage: {mem_usage:.1f} MB")
+            #print(f"Current memory usage: {mem_usage:.1f} MB")
         except:
             pass
     
@@ -565,6 +556,7 @@ class BatchProcessor:
         self.failed_files = 0
         self.total_files = 0
         self.failed_list = []
+        self.root_input_path = ""
     
     def find_nifti_files(self, root_path: str) -> List[Tuple[str, str]]:
         """Find all NIfTI files in the dataset structure and their relative paths"""
@@ -601,7 +593,7 @@ class BatchProcessor:
         """Process a single NIfTI file and return success status"""
         generator = None
         try:
-            print(f"Processing: {os.path.basename(input_file)}")
+            # print(f"Processing: {os.path.basename(input_file)}")
             
             # Check memory before processing
             process = psutil.Process(os.getpid())
@@ -632,7 +624,7 @@ class BatchProcessor:
             gc.collect()
             
             mem_after = process.memory_info().rss / 1024 / 1024  # MB
-            print(f"  Memory used: {mem_after - mem_before:.1f} MB")
+            # print(f"  Memory used: {mem_after - mem_before:.1f} MB")
             
             if image_paths:
                 print(f"  Success: Generated {len(image_paths)} images")
@@ -667,6 +659,8 @@ class BatchProcessor:
         print(f"Settings: rotation_step={rotation_step}°, elevation_step={elevation_step}°")
         print(f"Image size: {image_size}x{image_size}")
         print("=" * 80)
+
+        self.root_input_path = input_root
         
         # Find all NIfTI files
         print("Scanning for NIfTI files...")
@@ -688,7 +682,11 @@ class BatchProcessor:
         
         for i, (input_file, relative_path) in enumerate(nifti_files, 1):
             print(f"\n[{i}/{self.total_files}] Processing: {relative_path}")
-            
+
+            if i <= 255:
+                print("skipped")
+                continue
+
             try:
                 # Get the class directory (parent directory of the .nii.gz file)
                 relative_path_obj = Path(relative_path)
@@ -725,11 +723,11 @@ class BatchProcessor:
             
             if success:
                 self.processed_files += 1
-                print(f"  ✓ Successfully processed: {relative_path}")
+                # print(f" Successfully processed: {relative_path}")
             else:
                 self.failed_files += 1
                 self.failed_list.append(relative_path)
-                print(f"  ✗ Failed to process: {relative_path}")
+                print(f" Failed to process: {relative_path}")
             
             # Progress update with memory monitoring
             elapsed_time = time.time() - start_time
@@ -745,7 +743,7 @@ class BatchProcessor:
             except:
                 mem_info = ""
             
-            print(f"  Progress: {i}/{self.total_files} files processed")
+            # print(f"  Progress: {i}/{self.total_files} files processed")
             print(f"  Success: {self.processed_files}, Failed: {self.failed_files}")
             print(f"  Elapsed: {elapsed_time:.1f}s, ETA: {estimated_remaining_time:.1f}s{mem_info}")
             
@@ -796,11 +794,19 @@ class BatchProcessor:
             print("  - Verify file permissions")
             print("  - Ensure sufficient disk space in output directory")
             print("  - Try processing failed files individually for detailed error messages")
+
+            # Save failed files to a text file for reference
+
+            save_path = os.path.join(self.root_input_path, 'fail_to_process.txt')
+            with open(save_path, 'w') as f:
+                for item in self.failed_list:
+                    f.write(str(item) + '\n')
         
         print("=" * 80)
 
 
 def main():
+    
     parser = argparse.ArgumentParser(
         description='3D NIfTI to Multi-view 2D Image Generator',
         epilog='''

@@ -1,0 +1,2 @@
+python 3d_to_multiview.py "d:\Kananat\Data\training_dataset_3D\training_dataset_OA\test\0\65-23331 L_adjustedBG.nii.gz" "C:\Users\kanan\Desktop\Project_TMJOA\Data\output\Multiview_output"
+python 3d_to_multiview.py --batch "D:\Kananat\Data\training_dataset_3D\training_dataset_OA" "D:\Kananat\Data\training_dataset_2D\Multiview\OA_multiview"
