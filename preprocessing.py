@@ -15,6 +15,7 @@ import networkx as nx
 from DICOMLib import DICOMUtils
 import pydicom
 import csv
+import glob
 
 def get_dicom_metadata(file_path):
     # Read the DICOM file
@@ -88,6 +89,7 @@ def segmentation(filepath, outputfolder):
     node = slicer.util.loadVolume(filepath)
 
     widget.inputSelector.setCurrentNode(node)
+    widget.deviceComboBox.setCurrentText("cpu")
     widget.applyButton.clicked()
     widget.logic.waitForSegmentationFinished()
     slicer.app.processEvents()
@@ -221,7 +223,7 @@ def segmentation_masking(volume_path, segmentation_path, output_folder):
     # Set up masking parameters
     segmentEditorWidget.setActiveEffectByName("Mask volume")
     effect = segmentEditorWidget.activeEffect()
-    effect.setParameter("FillValue", "-4000")
+    effect.setParameter("FillValue", "-2000")
     effect.setParameter("Operation", "FILL_OUTSIDE")
     maskedVolume = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLScalarVolumeNode", "Temporary masked volume")
     effect.self().outputVolumeSelector.setCurrentNode(maskedVolume)
@@ -416,12 +418,12 @@ def preprocessing_single(input_file, result_folder, crop_size=112, threshold=-39
 
     total_steps = 4
 
-    # Step 0: Convert DICOM to NIfTI if necessary
-    if os.path.isdir(input_file):
-        # Convert DICOM to NIfTI
-        nii_folder = os.path.join(result_folder, 'Nii')
-        nii_file = convert_dcm_to_nii(input_file, nii_folder)
-        input_file = nii_file
+    # # Step 0: Convert DICOM to NIfTI if necessary
+    # if os.path.isdir(input_file):
+    #     # Convert DICOM to NIfTI
+    #     nii_folder = os.path.join(result_folder, 'Nii')
+    #     nii_file = convert_dcm_to_nii(input_file, nii_folder)
+    #     input_file = nii_file
 
     # Step 1: Segmentation
     step = 1
@@ -431,7 +433,7 @@ def preprocessing_single(input_file, result_folder, crop_size=112, threshold=-39
     segmentation_folder = os.path.join(result_folder, 'Segmentation')
     segmented_file = segmentation(input_file, segmentation_folder)
 
-    # # Step 2: Augment segmentation
+    # Step 2: Augment segmentation
     step = 2
     bar= '▓' * step + '░' * (total_steps - step)
     print(f"Processing {file_name_without_extension} [{bar}]", end='\r')
@@ -474,7 +476,9 @@ def find_dcm_folder(input_folder):
 
 def batch_preprocessing(input_folder, result_folder, start_from=0, crop_size=112, threshold=-3999):
 
-    dcm_folder = find_dcm_folder(input_folder)
+    # dcm_folder = find_dcm_folder(input_folder)
+    pattern = rf"{input_folder}\*.nii.gz"
+    dcm_folder = glob.glob(pattern)
     files = sorted(dcm_folder)
     files_count = len(files)
     
@@ -498,17 +502,19 @@ def batch_preprocessing(input_folder, result_folder, start_from=0, crop_size=112
             with open(log_file, 'a', newline='', encoding='utf-8') as csvfile:
                 
                 writer = csv.writer(csvfile)
-                text = f"Error processing {filename}: {e}"
+                text = f"{progress_count} Error processing {filename}: {e}"
                 writer.writerow(text)
 
-            continue
+            print("Terminated")
+            return 0
+            # continue
 
-resume_from = 0
-input_folder = r"D:\Kananat\Data\raw_Data_and_extra\Open access data\Follow_up\Preprocessed_Followup\Masked"
-result_folder = r"D:\Kananat\Data\raw_Data_and_extra\Open access data\Follow_up\Preprocessed_Followup\reCropped"
-log_file = r"C:\Users\kanan\Desktop\Project_TMJOA\Preprocessing\log.csv"
+resume_from = 98
+input_folder = r"C:\Users\acer\Desktop\Project_TMJOA\Data\Open access data\Baseline_fixed"
+result_folder = r"C:\Users\acer\Desktop\Project_TMJOA\Data\Open access data\Baseline_preprocessed"
+log_file = r"C:\Users\acer\Desktop\Project_TMJOA\Data\Open access data\Baseline_preprocessing_log.csv"
 
-# exec(open(r"C:\Users\kanan\Desktop\Project_TMJOA\Preprocessing\preprocessing.py").read())
+# exec(open(r"C:\Users\acer\Desktop\Project_TMJOA\preprocessing.py").read())
 
-batch_preprocessing(input_folder, result_folder, start_from = resume_from, crop_size=112, threshold=-3999)
+main = batch_preprocessing(input_folder, result_folder, start_from = resume_from, crop_size=200, threshold=-1999)
 # preprocessing_single(input_folder, result_folder, crop_size=112, threshold=-3999)

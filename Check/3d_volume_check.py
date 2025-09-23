@@ -1,17 +1,19 @@
 # exec(open(r"C:\Users\acer\Desktop\Project_TMJOA\Check\3d_volume_check.py").read())
 # This script is use to check the 3d volume in 'input_folder' and save the problemetic files's name in 'output_file'
-import os, sys
+import os, sys, glob
 import slicer
 from slicer.ScriptedLoadableModule import *
 
 # Define the folder containing the .nii files
-input_folder = r"C:\Users\acer\Desktop\Project_TMJOA\Data\Open access data\Follow_up_rmDoubleBg"
-output_file = f"{input_folder}\\check_result.txt"
+input_folder = r"C:\Users\acer\Desktop\Project_TMJOA\Data\Open access data\Follow_up_fixed"
+output_file = rf"{input_folder}\check_result.txt"
 
 with open(output_file, 'w') as log_file:
-    log_file.write('')  # Optionally write a header or leave it completely empty
+    log_file.write('')
 
-files = os.listdir(input_folder)
+pattern = rf"{input_folder}\*.nii.gz"
+files = glob.glob(pattern)
+
 number_of_files = len(files)
 
 print(f"There are {number_of_files} .nii.gz files in the {input_folder}")

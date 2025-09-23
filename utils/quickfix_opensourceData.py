@@ -3,7 +3,8 @@ import nibabel as nib
 import numpy as np
 
 def quickfix(input_folder, output_folder):
-    BG_VALUE = -2000
+    BG_MIN = -2000
+    BG_MAX = None
     files = os.listdir(input_folder)
     founded_files = len(files)
     print(f"Found {founded_files} files")
@@ -26,7 +27,7 @@ def quickfix(input_folder, output_folder):
         image_data = image.get_fdata()
 
         image_data = np.round(image_data, decimals=1)
-        image_data = np.clip(image_data, a_min = BG_VALUE, a_max = None)
+        image_data = np.clip(image_data, a_min = BG_MIN, a_max = BG_MAX)
 
         output_path = os.path.join(output_folder, file)
 
@@ -34,6 +35,6 @@ def quickfix(input_folder, output_folder):
         nib.save(new_img, output_path)
 
 if __name__ == "__main__":
-    input_folder = r"C:\Users\acer\Desktop\Project_TMJOA\Data\Open access data\Follow_up_rmDoubleBg"
-    output_folder = r"C:\Users\acer\Desktop\Project_TMJOA\Data\Open access data\Follow_up_fixed"
+    input_folder = r"C:\Users\acer\Desktop\Project_TMJOA\Data\Open access data\Baseline_rmDoubleBg"
+    output_folder = r"C:\Users\acer\Desktop\Project_TMJOA\Data\Open access data\Baseline_fixed"
     quickfix(input_folder, output_folder)
