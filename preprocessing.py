@@ -509,7 +509,7 @@ def batch_preprocessing(input_folder, result_folder, start_from=0, crop_size=112
             return 0
             # continue
 
-resume_from = 98
+resume_from = 132
 input_folder = r"C:\Users\acer\Desktop\Project_TMJOA\Data\Open access data\Baseline_fixed"
 result_folder = r"C:\Users\acer\Desktop\Project_TMJOA\Data\Open access data\Baseline_preprocessed"
 log_file = r"C:\Users\acer\Desktop\Project_TMJOA\Data\Open access data\Baseline_preprocessing_log.csv"
