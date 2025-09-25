@@ -15,9 +15,10 @@ Phase_2.1/YOLO/runs/classify/train/weights/last.pt
 3D_Pipeline/AI_code/tmj_results/checkpoints/tmj_model_training_log.csv
 /Editing_Yolo
 /runs
-/Output
+Output
 yolo11m-cls.pt
 yolo11n.pt
 /Multi view exp/.claude
 /Multi view exp/fail_files
 /Multi view exp/Test
+model
