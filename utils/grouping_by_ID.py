@@ -10,26 +10,28 @@ def getUniqueID(files_list):
             unique_id.append(patient_id)
     return unique_id
 
-def groupingByID(input_folder):
-    for root, dir, file in os.walk(input_folder):
-        # print(f"root: {root}")
-        # print(f"file: {file}")
-        ids = getUniqueID(file)
-        for id in ids:
-            print(f"Processing : {id}")
+def groupingByID(input_folder, output_folder):
+    class_names = os.listdir(input_folder)
+    for class_name in class_names:
+        images_folder = os.path.join(input_folder, class_name)
+        ids = getUniqueID(os.listdir(images_folder))
 
-            patient_image_folder = os.path.join(root, id)
+        for id in ids:
+            print(f"Processing : {id} from class {class_name}")
+
+            patient_image_folder = os.path.join(output_folder, class_name, id)
             os.makedirs(patient_image_folder, exist_ok=True)
             
-            images_path = glob.glob(f"{root}\\{id}*")
+            images_path = glob.glob(f"{images_folder}\\{id}*")
 
             for image_path in images_path:
                 image_name = os.path.basename(image_path)
                 destination = os.path.join(patient_image_folder, image_name)
-                #print(image_path)
-                # shutil.copy2(image_path, destination)
-                print(f"moved {image_path} to {destination}")
+                shutil.copy2(image_path, destination)
+            print(f"moved {len(images_path)} to {patient_image_folder}")
 
 if __name__ == "__main__":
-    input_folder = r"C:\Users\acer\Desktop\Project_TMJOA\Data\output\training_dataset_OA\test"
-    groupingByID(input_folder)
+    subset = "subCyst_multiview"
+    input_folder = rf"d:\Kananat\Data\training_dataset_2D\Multiview\{subset}\test"
+    output_folder = rf"d:\Kananat\Data\training_dataset_2D\Multiview\{subset}\test_grouped"
+    groupingByID(input_folder, output_folder)
