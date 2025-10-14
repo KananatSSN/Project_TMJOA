@@ -5,7 +5,7 @@ import slicer
 from slicer.ScriptedLoadableModule import *
 
 # Define the folder containing the .nii files
-input_folder = r"C:\Users\acer\Desktop\Project_TMJOA\Data\Open access data\Baseline_preprocessed\Cropped"
+input_folder = r"C:\Users\acer\Desktop\Project_TMJOA\Data\to_add_cropped"
 output_file = rf"{input_folder}\check_result.txt"
 
 with open(output_file, 'w') as log_file:

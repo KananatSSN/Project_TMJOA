@@ -106,7 +106,6 @@ class NiftiDataset(Dataset):
         
         return resized.squeeze(0).squeeze(0).numpy()
 
-
 class SimpleTransform:
     """Simple data augmentation for 3D images"""
     
@@ -196,7 +195,6 @@ class ModifiedWideResNet3D(nn.Module):
         x = self.fc(x)
         
         return x
-
 
 class BasicBlock3D(nn.Module):
     """Basic 3D residual block"""
@@ -609,7 +607,7 @@ def main():
     # Create model
     model = ModifiedWideResNet3D(
         input_size=config['target_size'],
-        width=2,
+        width=1,
         num_classes=2,
         dropout_rate=0.1
     )
