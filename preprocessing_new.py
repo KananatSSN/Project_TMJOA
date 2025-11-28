@@ -1,4 +1,4 @@
-# exec(open(r"C:\Users\kanan\Desktop\Project_TMJOA\Preprocessing\preprocessing.py").read())
+# exec(open(r"C:\Users\kanan\Desktop\Project_TMJOA\preprocessing_new.py").read())
 
 import time
 import slicer
@@ -201,6 +201,32 @@ def expand_and_fill_holes_in_segmentation(input_file, output_folder, margin_pixe
     output_file = os.path.join(output_folder, f"{file_name_without_extension}_segmentationEdited.nii.gz")
 
     nib.save(covered_img, output_file)
+    return output_file
+
+def editing_segmentation(input_file, output_folder, margin_pixels=5, fill_holes=True):
+    img = nib.load(input_file)
+    data = img.get_fdata()
+    affine, header = img.affine, img.header
+
+    filled_data = fill_holes_3d(data)
+
+    skeleton = morphology.skeletonize(filled_data)
+
+    reference_point = (data.shape[0]//2, 0, 0)
+    endpoint = find_closest_endpoint(skeleton, reference_point)
+
+    cropped_image = crop_around_point(data, endpoint, 128)
+    cropped_image = cropped_image[0:256, 0:256, 0:256]
+    cropped_image = fill_holes_3d(cropped_image)
+
+    cropped_image = nib.Nifti1Image(cropped_image, img.affine, img.header)
+    
+    # Save the result
+    file_name = os.path.basename(input_file)
+    file_name_without_extension = file_name.rsplit('_', 1)[0]
+    output_file = os.path.join(output_folder, f"{file_name_without_extension}_segmentationEdited.nii.gz")
+
+    nib.save(cropped_image, output_file)
     return output_file
 
 def segmentation_masking(volume_path, segmentation_path, output_folder):
@@ -413,7 +439,8 @@ def crop_around_point(image, point, crop_size):
 
 def preprocessing_single(input_file, result_folder, crop_size=112, threshold=-3999):
 
-    step_folder = ['Nii','Segmentation','Edited_Segmentation', 'Masked', 'Cropped']
+    # step_folder = ['Nii','Segmentation','Edited_Segmentation', 'Masked', 'Cropped']
+    step_folder = ['2_Masked']
     for folder in step_folder:
         os.makedirs(os.path.join(result_folder, folder), exist_ok=True)
     
@@ -429,37 +456,23 @@ def preprocessing_single(input_file, result_folder, crop_size=112, threshold=-39
     #     nii_file = convert_dcm_to_nii(input_file, nii_folder)
     #     input_file = nii_file
 
-    # Step 1: Segmentation
-    step = 1
-    bar= '▓' * step + '░' * (total_steps - step)
-    print(f"Processing {file_name_without_extension} [{bar}]", end='\r')
-    slicer.mrmlScene.Clear(0)
-    segmentation_folder = os.path.join(result_folder, 'Segmentation')
-    segmented_file = segmentation(input_file, segmentation_folder)
-
-    # Step 2: Augment segmentation
-    step = 2
-    bar= '▓' * step + '░' * (total_steps - step)
-    print(f"Processing {file_name_without_extension} [{bar}]", end='\r')
-    slicer.mrmlScene.Clear(0)
-    edited_folder = os.path.join(result_folder, 'Edited_Segmentation')
-    editedSegment_file = expand_and_fill_holes_in_segmentation(segmented_file, edited_folder, margin_pixels=5, fill_holes=True)
+    # # Step 2: Augment segmentation
+    # step = 2
+    # bar= '▓' * step + '░' * (total_steps - step)
+    # print(f"Processing {file_name_without_extension} [{bar}]", end='\r')
+    # slicer.mrmlScene.Clear(0)
+    # edited_folder = os.path.join(result_folder, 'Edited_Segmentation')
+    # editedSegment_file = expand_and_fill_holes_in_segmentation(segmented_file, edited_folder, margin_pixels=5, fill_holes=True)
 
     # Step 3: Masking
+    editedSegmentation_folder = r"D:\Kananat\Data\Last0\1_EditedSegmentation"
+    editedSegmentation_file = os.path.join(editedSegmentation_folder, f"{file_name_without_extension}_editedSegmentation.nii.gz")
     step = 3
     bar= '▓' * step + '░' * (total_steps - step)
     print(f"Processing {file_name_without_extension} [{bar}]", end='\r')
     slicer.mrmlScene.Clear(0)
     masked_folder = os.path.join(result_folder, 'Masked')
-    masked_file = segmentation_masking(input_file, editedSegment_file, masked_folder)
-
-    # Step 4: Skeletonization and cropping
-    step = 4
-    bar= '▓' * step + '░' * (total_steps - step)
-    print(f"Processing {file_name_without_extension} [{bar}]", end='\r')
-    slicer.mrmlScene.Clear(0)
-    cropped_folder = os.path.join(result_folder, 'Cropped')
-    skeletonized_cropping(masked_file, crop_size=crop_size, output_folder=cropped_folder, threshold=threshold)
+    masked_file = segmentation_masking(input_file, editedSegmentation_file, masked_folder)
 
     print("\n")
 
@@ -514,8 +527,8 @@ def batch_preprocessing(input_folder, result_folder, start_from=0, crop_size=112
             # continue
 
 resume_from = 0
-input_folder = r"D:\Kananat\Data\processing_More_data\Sorted_More_data_nii"
-result_folder = r"D:\Kananat\Data\processing_More_data\preprocessed"
+input_folder = r"D:\Kananat\Data\Last0\0_Nii"
+result_folder = r"D:\Kananat\Data\Last0"
 log_file = rf"{result_folder}\preprocessing_log.csv"
 
 # exec(open(r"C:\Users\kanan\Desktop\Project_TMJOA\preprocessing.py").read())

@@ -1,11 +1,11 @@
-# exec(open(r"C:\Users\acer\Desktop\Project_TMJOA\Check\3d_volume_check.py").read())
+# exec(open(r"C:\Users\kanan\Desktop\Project_TMJOA\Check\3d_volume_check.py").read())
 # This script is use to check the 3d volume in 'input_folder' and save the problemetic files's name in 'output_file'
 import os, sys, glob
 import slicer
 from slicer.ScriptedLoadableModule import *
 
 # Define the folder containing the .nii files
-input_folder = r"C:\Users\acer\Desktop\Project_TMJOA\Data\to_add_cropped"
+input_folder = r"D:\Kananat\Data\Last0\2_Masked"
 output_file = rf"{input_folder}\check_result.txt"
 
 with open(output_file, 'w') as log_file:

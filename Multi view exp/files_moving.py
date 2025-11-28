@@ -60,21 +60,23 @@ def organize_images_by_dataset_structure(dataset_path, images_path, output_path)
                                 # print(f"    Copied: {image_file} to {destination}")
                             except Exception as e:
                                 print(f"    Error copying {image_file.name}: {e}")
+
+                        print(f"    Found and copied {copied_count} images for patient {patient_id}")
                         
-                        if copied_count == 32:
-                            # print(f" Success")
-                            success_count += 1
-                        else:
-                            print(f" Fail")
+                        # if copied_count == 32:
+                        #     # print(f" Success")
+                        #     success_count += 1
+                        # else:
+                        #     print(f" Fail")
     
     print(f"\nDataset organization complete! New dataset created at: {output_path}")
     print(f"Total successful patients with 32 images: {success_count}")
 # Example usage
 if __name__ == "__main__":
     # Define your paths here
-    dataset_path = r"D:\Kananat\Data\training_dataset_3D\training_dataset_subCyst"  # Path to your original dataset with .nii.gz files
-    images_path = r"D:\Kananat\Data\training_dataset_2D\Multiview\OA_multiview"    # Path to your folder with PNG images
-    output_path = r"D:\Kananat\Data\training_dataset_2D\Multiview\subCyst_multiview"  # Path where you want the new organized dataset
+    dataset_path = r"d:\Kananat\Data\training_dataset_3D\training_dataset_genSclerosis"  # Path to your original dataset with .nii.gz files
+    images_path = r"d:\Kananat\Data\training_dataset_2D\training_dataset_osteophyte"    # Path to your folder with PNG images
+    output_path = r"d:\Kananat\Data\training_dataset_2D\training_dataset_genSclerosis"  # Path where you want the new organized dataset
     
     # Organize the images
     organize_images_by_dataset_structure(dataset_path, images_path, output_path)

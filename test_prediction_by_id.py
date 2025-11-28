@@ -145,23 +145,25 @@ def predict_by_ID(model, test_folder, conf_threshold = 0.7):
 
 if __name__ == "__main__":
 
+    split = "test"
+
     erosion_model_path = r"C:\Users\kanan\Desktop\Project_TMJOA\model\erosion_multiview\content\runs\classify\MultiView_erosion\weights\best.pt"
-    erosion_data_path = r"d:\Kananat\Data\training_dataset_2D\Multiview\erosion_multiview\test_grouped"
+    erosion_data_path = rf"d:\Kananat\Data\training_dataset_2D\Multiview\erosion_multiview\{split}_grouped"
 
     flattenning_model_path = r"C:\Users\kanan\Desktop\Project_TMJOA\model\flattening_multiview\content\runs\classify\MultiView_flattening\weights\best.pt"
-    flattenning_data_path = r"d:\Kananat\Data\training_dataset_2D\Multiview\flattening_multiview\test_grouped"
+    flattenning_data_path = rf"d:\Kananat\Data\training_dataset_2D\Multiview\flattening_multiview\{split}_grouped"
 
     genSclerosis_model_path = r"C:\Users\kanan\Desktop\Project_TMJOA\model\genSclerosis_cont_multiview\content\runs\classify\genSclerosis_cont\weights\best.pt"
-    genSclerosis_data_path = r"d:\Kananat\Data\training_dataset_2D\Multiview\genSclerosis_multiview\test_grouped"
+    genSclerosis_data_path = rf"d:\Kananat\Data\training_dataset_2D\Multiview\genSclerosis_multiview\{split}_grouped"
 
     OA_model_path = r"C:\Users\kanan\Desktop\Project_TMJOA\model\OA_multiview\runs\classify\MultiView_OA3\weights\best.pt"
-    OA_data_path = r"d:\Kananat\Data\training_dataset_2D\Multiview\OA_multiview\test_grouped"
+    OA_data_path = rf"d:\Kananat\Data\training_dataset_2D\Multiview\OA_multiview\{split}_grouped"
 
     osteophyte_model_path = r"C:\Users\kanan\Desktop\Project_TMJOA\model\osteophyte_multiview\content\runs\classify\osteophyte\weights\best.pt"
-    osteophyte_data_path = r"d:\Kananat\Data\training_dataset_2D\Multiview\osteophyte_multiview\test_grouped"
+    osteophyte_data_path = rf"d:\Kananat\Data\training_dataset_2D\Multiview\osteophyte_multiview\{split}_grouped"
 
     subCyst_model_path = r"C:\Users\kanan\Desktop\Project_TMJOA\model\subCyst_multiview\content\runs\classify\subCyst\weights\best.pt"
-    subCyst_data_path = r"D:\Kananat\Data\training_dataset_2D\Multiview\subCyst_multiview\test_grouped"
+    subCyst_data_path = rf"d:\Kananat\Data\training_dataset_2D\Multiview\subCyst_multiview\{split}_grouped"
 
     erosion_path = (erosion_model_path, erosion_data_path)
     flattenning_path = (flattenning_model_path, flattenning_data_path)
@@ -170,31 +172,42 @@ if __name__ == "__main__":
     osteophyte_path = (osteophyte_model_path, osteophyte_data_path)
     subCyst_path = (subCyst_model_path, subCyst_data_path)
 
+    best_conf = {
+        'erosion_multiview': 0.84,
+        'flattening_multiview': 0.7,
+        'genSclerosis_multiview': 0.99,
+        'OA_multiview': 0.79,
+        'osteophyte_multiview': 0.86,
+        'subCyst_multiview': 0.94
+    }
+
     all_path = [erosion_path, flattenning_path, genSclerosis_path, OA_path, osteophyte_path, subCyst_path]
 
-    for model_path, data_path in all_path:
-        print(f"Processing model: {data_path}")
+    # for model_path, data_path in all_path:
+    #     print(f"Processing model: {data_path}")
+    #     model = YOLO(model_path)
+    #     get_prediction_results(model, data_path)
+
+    for model_path, test_folder in all_path:
+        save_result_path = rf"{test_folder}\result_best_conf.txt"
+
+        dataset_name = os.path.basename(os.path.dirname(test_folder))
+        conf_threshold = best_conf.get(dataset_name, 0.7)  # Default to 0.7 if not found
+
         model = YOLO(model_path)
-        get_prediction_results(model, data_path)
+        metrics = predict_by_ID(model, test_folder, conf_threshold=conf_threshold)
+        cm = metrics['confusion_matrix']
+        pprint.pprint(metrics)
 
-    # test_folder = r"D:\Kananat\Data\training_dataset_2D\Multiview\subCyst_multiview\test_grouped"
-    # model_path = r"C:\Users\kanan\Desktop\Project_TMJOA\model\subCyst_multiview\content\runs\classify\subCyst\weights\best.pt"
-    # save_result_path = rf"{test_folder}\result.txt"
+        with open(save_result_path, 'w') as file:
+            
+            file.write(f"Accuracy: {metrics['accuracy']:.4f}\n")
+            file.write(f"Precision: {metrics['precision']:.4f}\n")
+            file.write(f"Recall: {metrics['recall']:.4f}\n")
+            file.write(f"F1 score: {metrics['f1_score']:.4f}\n")
+            file.write("           Predicted\n")
+            file.write("           0       1\n")
+            file.write(f"Actual 0  {cm['tn']:2d}      {cm['fp']:2d}\n")
+            file.write(f"       1  {cm['fn']:2d}      {cm['tp']:2d}\n")
 
-    # model = YOLO(model_path)
-    # metrics = predict_by_ID(model, test_folder, conf_threshold=0.7)
-    # cm = metrics['confusion_matrix']
-    # pprint.pprint(metrics)
-
-    # with open(save_result_path, 'w') as file:
-        
-    #     file.write(f"Accuracy: {metrics['accuracy']:.4f}\n")
-    #     file.write(f"Precision: {metrics['precision']:.4f}\n")
-    #     file.write(f"Recall: {metrics['recall']:.4f}\n")
-    #     file.write(f"F1 score: {metrics['f1_score']:.4f}\n")
-    #     file.write("           Predicted\n")
-    #     file.write("           0       1\n")
-    #     file.write(f"Actual 0  {cm['tn']:2d}      {cm['fp']:2d}\n")
-    #     file.write(f"       1  {cm['fn']:2d}      {cm['tp']:2d}\n")
-
-    # print(f"Results saved to: {save_result_path}")
+        print(f"Results saved to: {save_result_path}")
