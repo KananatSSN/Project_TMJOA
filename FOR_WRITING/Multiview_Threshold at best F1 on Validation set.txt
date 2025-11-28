@@ -1,0 +1,66 @@
+Best conf threshold on Validation Set:
+erosion
+    Conf Threshold: 0.53
+    Accuracy:       0.884
+    Precision:      0.917
+    Recall:         0.868
+    F1 Score:       0.892
+    Confusion Matrix
+             Predict[0]   Predict[1]
+    Real[0]      33           3
+    Real[1]      5            28
+
+flattening
+    Conf Threshold: 0.57
+    Accuracy:       0.574
+    Precision:      0.574
+    Recall:         1.000
+    F1 Score:       0.729
+    Confusion Matrix
+             Predict[0]   Predict[1]
+    Real[0]      39           29
+    Real[1]      0            0
+
+genSclerosis
+    Conf Threshold: 0.14
+    Accuracy:       0.870
+    Precision:      0.583
+    Recall:         0.636
+    F1 Score:       0.609
+    Confusion Matrix
+             Predict[0]   Predict[1]
+    Real[0]      7           5
+    Real[1]      4            53
+
+OA
+    Conf Threshold: 0.54
+    Accuracy:       0.896
+    Precision:      0.971
+    Recall:         0.846
+    F1 Score:       0.904
+    Confusion Matrix
+             Predict[0]   Predict[1]
+    Real[0]      33           1
+    Real[1]      6            27
+
+osteophyte
+    Conf Threshold: 0.44
+    Accuracy:       0.840
+    Precision:      0.825
+    Recall:         0.868
+    F1 Score:       0.846
+    Confusion Matrix
+             Predict[0]   Predict[1]
+    Real[0]      33           7
+    Real[1]      5            30
+
+subCyst
+    Conf Threshold: 0.34
+    Accuracy:       0.803
+    Precision:      0.625
+    Recall:         0.556
+    F1 Score:       0.588
+    Confusion Matrix
+             Predict[0]   Predict[1]
+    Real[0]      10           6
+    Real[1]      8            47

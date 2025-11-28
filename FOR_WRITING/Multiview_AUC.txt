@@ -1,0 +1,7 @@
+AUC Results:
+erosion: 0.775
+flattening: 0.455
+genSclerosis: 0.863
+OA: 0.947
+osteophyte: 0.868
+subCyst: 0.766

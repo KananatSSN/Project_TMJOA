@@ -31,7 +31,13 @@ def groupingByID(input_folder, output_folder):
             print(f"moved {len(images_path)} to {patient_image_folder}")
 
 if __name__ == "__main__":
-    subset = "subCyst_multiview"
-    input_folder = rf"d:\Kananat\Data\training_dataset_2D\Multiview\{subset}\test"
-    output_folder = rf"d:\Kananat\Data\training_dataset_2D\Multiview\{subset}\test_grouped"
-    groupingByID(input_folder, output_folder)
+    subset = ['erosion_multiview', 'flattening_multiview', 'genSclerosis_multiview', 'OA_multiview', 'osteophyte_multiview', 'subCyst_multiview']
+    for subset in subset:
+        print(f"Processing subset: {subset}")
+        input_folder = rf"d:\Kananat\Data\training_dataset_2D\Multiview\{subset}\val"
+        if os.path.isdir(input_folder):    
+            output_folder = rf"d:\Kananat\Data\training_dataset_2D\Multiview\{subset}\val_grouped"
+            os.makedirs(output_folder, exist_ok=True)
+            groupingByID(input_folder, output_folder)
+        else:
+            print(f"Directory {input_folder} does not exist.")

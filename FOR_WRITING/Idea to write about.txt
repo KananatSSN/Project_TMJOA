@@ -1,0 +1,26 @@
+1. Yolo is predominantly used in TMJOA segmentation and classfication.
+2. We purpose 2 steps solution 1. Condyle segmentation and then 2. Classification
+	2.1 This is because TMJOA is ambiguous but condyle segementation is less so because it's not ambiguous whether a thing is a condyle or not
+3. The current methodology require slice selection from the CBCT volume. Which is counter productive. Requiring more labeling effort, limiting scalability of the dataset.
+4. Yolo, a 2D model is used despite CBCT image being 3D.
+5. We purpose preprocessing step which we hope to fix generalization issue of the model by
+	5.1 Inspecting the voxel value distribution of the input data
+	5.2 Transfrom it to match the expected distribution, Guassian mixture
+	5.3 Value clipping normalization
+	5.4 Voxel size normalization to 0.125 mm
+	5.5 Condyle segmentation by DentalSegmentator
+	5.6 Condylar head centering and cropping with skeletonization
+6. Data representation transformation
+	There are multiple way to represent 3D image. We explore 3 way here 1. 2D images with max entropy. 2. Multiview and 3. 3D Voxel
+	6.1 For 2D image with max entropy, we extract 2D layer from 3D volume by selecting the layer with max non bg ratio and then extract layer from n distance from such layer. This is because the layer that is in close ploximity to each other are similar.
+	6.2 For Multiview we first transform voxel to mesh and then encode the average value from surface as color
+	6.3 3D model input is as is
+7. Model
+	7.1 Yolo11m-cls for 2D layer and Multiview approch
+		7.1.1 Trained for 200 epochs
+		7.1.2 Default ultralytics yolo augmentation
+	7.2 Quater width 3D Resnet18 for 3D
+		7.2.1 Trained for 200 epochs
+		7.2.2 Custom 3D augmentation with randAugment policy
+8. Results
+9. TMD classification is already a subjective thing. More annotation mean more input from the labeler which introduce more uncertainty.

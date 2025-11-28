@@ -1,4 +1,4 @@
-# exec(open(r"C:\Users\acer\Desktop\Project_TMJOA\Check\3d_volume_check.py").read())
+# exec(open(r"C:\Users\kanan\Desktop\Project_TMJOA\Check\3d_volume_check.py").read())
 # This script is use to check the 3d volume in 'input_folder' and save the problemetic files's name in 'output_file'
 import os, sys, glob
 import slicer
